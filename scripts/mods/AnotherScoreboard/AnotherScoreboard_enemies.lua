@@ -1,0 +1,120 @@
+return {
+    lesser = {
+        {
+            stat_id = "ranged_lesser_enemies_killed",
+            label = "row_ranged_lesser_enemies_killed",
+            name = "Ranged Lesser Enemies",
+            breeds = { "cultist_assault", "renegade_assault", "renegade_rifleman" },
+        },
+        {
+            stat_id = "melee_lesser_enemies_killed",
+            label = "row_melee_lesser_enemies_killed",
+            name = "Melee Lesser Enemies",
+            breeds = {
+                "chaos_newly_infected",
+                "chaos_poxwalker",
+                "chaos_mutated_poxwalker",
+                "chaos_lesser_mutated_poxwalker",
+                "chaos_armored_infected",
+                "cultist_melee",
+                "renegade_melee",
+                "cultist_vanguard",
+                "renegade_vanguard",
+            },
+        },
+    },
+    specials = {
+        {
+            stat_id = "special_pox_hound_killed",
+            label = "row_special_pox_hound",
+            name = "Pox Hounds",
+            breeds = { "chaos_hound", "chaos_hound_mutator", "chaos_armored_hound" },
+        },
+        {
+            stat_id = "special_mutant_killed",
+            label = "row_special_mutant",
+            name = "Mutants",
+            breeds = { "cultist_mutant", "cultist_mutant_mutator" },
+        },
+        {
+            stat_id = "special_trapper_killed",
+            label = "row_special_trapper",
+            name = "Trappers",
+            breeds = { "renegade_netgunner" },
+        },
+        {
+            stat_id = "special_poxburster_killed",
+            label = "row_special_poxburster",
+            name = "Poxbursters",
+            breeds = { "chaos_poxwalker_bomber" },
+        },
+        {
+            stat_id = "special_bomber_killed",
+            label = "row_special_bomber",
+            name = "Bombers",
+            breeds = { "renegade_grenadier", "cultist_grenadier" },
+        },
+        {
+            stat_id = "special_sniper_killed",
+            label = "row_special_sniper",
+            name = "Snipers",
+            breeds = { "renegade_sniper" },
+        },
+        {
+            stat_id = "special_flamer_killed",
+            label = "row_special_flamer",
+            name = "Flamers",
+            breeds = { "renegade_flamer", "renegade_flamer_mutator", "cultist_flamer" },
+        },
+    },
+    elites = {
+        {
+            stat_id = "elite_rager_killed",
+            label = "row_elite_rager",
+            name = "Ragers",
+            breeds = { "cultist_berzerker", "renegade_berzerker" },
+        },
+        {
+            stat_id = "elite_mauler_killed",
+            label = "row_elite_mauler",
+            name = "Maulers",
+            breeds = { "renegade_executor" },
+        },
+        {
+            stat_id = "elite_bulwark_killed",
+            label = "row_elite_bulwark",
+            name = "Bulwarks",
+            breeds = { "chaos_ogryn_bulwark" },
+        },
+        {
+            stat_id = "elite_crusher_killed",
+            label = "row_elite_crusher",
+            name = "Crushers",
+            breeds = { "chaos_ogryn_executor" },
+        },
+        {
+            stat_id = "elite_gunner_killed",
+            label = "row_elite_gunner",
+            name = "Gunners",
+            breeds = { "cultist_gunner", "renegade_gunner" },
+        },
+        {
+            stat_id = "elite_shotgunner_killed",
+            label = "row_elite_shotgunner",
+            name = "Shotgunners",
+            breeds = { "cultist_shocktrooper", "renegade_shocktrooper" },
+        },
+        {
+            stat_id = "elite_reaper_killed",
+            label = "row_elite_reaper",
+            name = "Reapers",
+            breeds = { "chaos_ogryn_gunner" },
+        },
+        {
+            stat_id = "elite_plasma_gunner_killed",
+            label = "row_elite_plasma_gunner",
+            name = "Plasma Gunners",
+            breeds = { "renegade_plasma_gunner" },
+        },
+    },
+}
