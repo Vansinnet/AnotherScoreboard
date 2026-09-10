@@ -1,3 +1,4 @@
+---@type AnotherScoreboardMod
 local mod = get_mod("AnotherScoreboard")
 
 local pairs              = pairs
@@ -9,6 +10,7 @@ local Keyboard           = Keyboard
 local UIWorkspace = mod:original_require("scripts/settings/ui/ui_workspace_settings")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local LoadoutRender = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_loadout_render")
+local TalentTree = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_talent_tree")
 
 local BASE_Z = 100
 local VIEW_W = 900
@@ -23,8 +25,6 @@ local Y_KEY = Keyboard.button_index("y")
 local Q_KEY = Keyboard.button_index("q")
 local U_KEY = Keyboard.button_index("u")
 local T_KEY = Keyboard.button_index("t")
-local LEFT_KEY = Keyboard.button_index("left")
-local RIGHT_KEY = Keyboard.button_index("right")
 local PLAYER_KEYS = {
     Keyboard.button_index("1"), Keyboard.button_index("2"),
     Keyboard.button_index("3"), Keyboard.button_index("4"),
@@ -109,8 +109,6 @@ ASView.init = function(self, settings, context)
     self._show_loadout = false
     self._loadout_player = 1
     self._loadout_tree = false
-    self._loadout_talent = 1
-    self._loadout_talent_count = 0
 
     self._move_timer   = nil
     self._move_from    = 0
@@ -156,8 +154,45 @@ ASView.on_enter = function(self)
 end
 
 ASView.on_exit = function(self)
-    ASView.super.on_exit(self)
+    self._pending_social_account = nil
     self:_cleanup()
+    ASView.super.on_exit(self)
+end
+
+ASView._select_loadout_player = function(self, index)
+    if index ~= self._loadout_player then self._pending_loadout_player = index end
+end
+
+ASView._open_player_social = function(self, player)
+    if not (self._context.end_view or self._context.scoreboard_history) then return end
+    local account_id = player and player:account_id()
+    if type(account_id) ~= "string" or not math.is_uuid(account_id) then return end
+    local ui = Managers.ui
+    if not ui or not Managers.data_service or not Managers.data_service.social then return end
+    self._pending_social_account = account_id
+    self._social_open_timeout = 10
+    if not ui:open_view("social_menu_view", nil, false, false) then
+        self._pending_social_account = nil
+    end
+end
+
+ASView._update_social_request = function(self, dt)
+    local account_id = self._pending_social_account
+    if not account_id then return end
+    self._social_open_timeout = self._social_open_timeout - dt
+    local ui = Managers.ui
+    if self._social_open_timeout <= 0 or not ui or ui:is_view_closing("social_menu_view") then
+        self._pending_social_account = nil
+        return
+    end
+    local roster = ui:view_instance("social_menu_roster_view")
+    if roster and roster._party_widgets and #roster._party_widgets > 0 and not roster._popup_menu then
+        self._pending_social_account = nil
+        local social = Managers.data_service and Managers.data_service.social
+        if social then
+            roster:cb_show_popup_menu_for_player(social:get_player_info_by_account_id(account_id))
+        end
+    end
 end
 
 ASView._get_players = function(self)
@@ -213,6 +248,7 @@ ASView._build = function(self)
     if #players == 0 then return end
 
     local Render  = mod:get_render()
+    if not Render then return end
     local context = self._context
     local settings = mod:get_cached_settings()
     players = mod.order_scoreboard_players(players)
@@ -222,10 +258,14 @@ ASView._build = function(self)
     self._title_update_timer = 1.0
 
     if self._show_loadout then
+        self._loadout_player = math.max(1, math.min(#players, self._loadout_player))
+        if self._loadout_tree then
+            self._talent_tree, self._loadout_tree_error = TalentTree.new(self,
+                players[self._loadout_player].loadout_snapshot)
+        end
         local built = LoadoutRender.build(self, "content_area", players, self._loadout_player,
-            self._loadout_tree, self._loadout_talent, settings)
+            self._loadout_tree, settings)
         self._loadout_player_count = #players
-        self._loadout_talent_count = built.talent_count
         self._column_widgets = {}
         for i, w in ipairs(built.columns) do
             local registered = self:_create_widget("as_loadout_" .. i, w.widget)
@@ -244,6 +284,7 @@ ASView._build = function(self)
             sections = mod.filter_scoreboard_sections(sections, self._show_all_enemy_rows, self._show_all_dot_rows,
                 self._show_boss_details, self._show_survival_details, context.snapshot and context.snapshot.duration)
         end
+        sections = mod.external_stats.filter(sections, self._external_collapsed)
 
         local built = Render.build_widgets(self, "content_area", players, sections,
             render_settings_with_title(settings, title_text, false))
@@ -281,6 +322,7 @@ ASView._build = function(self)
     end
 
     local Stats   = mod:get_stats()
+    if not Stats then return end
 
     local ids = {}
     for i = 1, #players do
@@ -291,11 +333,14 @@ ASView._build = function(self)
     Stats.validate(ids)
 
     local sections = Stats.sections()
+    self._external_revision = mod.external_stats.revision
+    self._external_refresh_timer = 0.25
     if mod.filter_scoreboard_sections then
         sections = mod.filter_scoreboard_sections(sections, self._show_all_enemy_rows, self._show_all_dot_rows,
             self._show_boss_details, self._show_survival_details,
             mod.get_scoreboard_duration and mod.get_scoreboard_duration() or 0)
     end
+    sections = mod.external_stats.filter(sections, self._external_collapsed)
     local built = Render.build_widgets(self, "content_area", players, sections,
         render_settings_with_title(settings, title_text, end_view))
 
@@ -338,6 +383,12 @@ ASView._build = function(self)
 end
 
 ASView._cleanup = function(self)
+    if self._talent_tree then
+        self._talent_tree:destroy()
+        self._talent_tree = nil
+    end
+    self._loadout_tree_error = nil
+    self._pending_loadout_player = nil
     local cols = self._column_widgets
     if cols then
         for _, w in ipairs(cols) do
@@ -398,11 +449,19 @@ ASView._update_move = function(self, dt)
     end
 end
 
+ASView._toggle_external_group = function(self, key, closed)
+    self._external_collapsed = self._external_collapsed or {}
+    self._external_collapsed[key] = not closed
+    self._external_rebuild = true
+end
+
 ASView.update = function(self, dt, t, input_service)
+    self:_update_social_request(dt)
     local scoreboard_history = self._context and self._context.scoreboard_history
     local end_view = self._context and self._context.end_view
 
     if self._input_disabled or not input_service or input_service:is_null_service() then
+        if self._talent_tree then self._talent_tree:update(nil) end
         self:_update_move(dt)
         return ASView.super.update(self, dt, t, input_service)
     end
@@ -420,10 +479,14 @@ ASView.update = function(self, dt, t, input_service)
 
     if self._show_loadout then
         local rebuild = false
+        if self._pending_loadout_player then
+            self._loadout_player = self._pending_loadout_player
+            self._pending_loadout_player = nil
+            rebuild = true
+        end
         for i = 1, math.min(self._loadout_player_count or 0, #PLAYER_KEYS) do
             if Keyboard.pressed(PLAYER_KEYS[i]) and self._loadout_player ~= i then
                 self._loadout_player = i
-                self._loadout_talent = 1
                 rebuild = true
             end
         end
@@ -433,26 +496,27 @@ ASView.update = function(self, dt, t, input_service)
         end
         local scroll_axis = input_service:get("scroll_axis")
         local scroll = scroll_axis and scroll_axis[2] or 0
+        if not self._loadout_tree then
+            local widget = self._column_widgets and self._column_widgets[1]
+            for i = 1, 4 do
+                local hotspot = widget and widget.content["signature_hotspot_" .. i]
+                if hotspot and hotspot.is_hover and scroll ~= 0 then
+                    hotspot.page = math.max(1, math.min(hotspot.pages, (hotspot.page or 1) + (scroll > 0 and -1 or 1)))
+                    scroll = 0
+                    break
+                end
+            end
+        end
         if not self._loadout_tree and not rebuild and scroll ~= 0 then
             local player_count = self._loadout_player_count or 0
             if player_count > 1 then
                 local direction = scroll > 0 and -1 or 1
                 self._loadout_player = (self._loadout_player - 1 + direction) % player_count + 1
-                self._loadout_talent = 1
-                rebuild = true
-            end
-        elseif self._loadout_tree and not rebuild and self._loadout_talent_count > 0 then
-            local direction = Keyboard.pressed(RIGHT_KEY) and 1
-                or Keyboard.pressed(LEFT_KEY) and -1
-                or scroll > 0 and -1
-                or scroll < 0 and 1
-                or 0
-            if direction ~= 0 then
-                self._loadout_talent = (self._loadout_talent - 1 + direction) % self._loadout_talent_count + 1
                 rebuild = true
             end
         end
         if rebuild then self:_build() end
+        if self._talent_tree then self._talent_tree:update(input_service) end
         self:_update_move(dt)
         return ASView.super.update(self, dt, t, input_service)
     end
@@ -476,6 +540,13 @@ ASView.update = function(self, dt, t, input_service)
         _apply_scoreboard_position(self)
         self:_update_move(dt)
         return ASView.super.update(self, dt, t, input_service)
+    end
+
+    self._external_refresh_timer = (self._external_refresh_timer or 0) - dt
+    if self._external_rebuild or not scoreboard_history
+        and self._external_revision ~= mod.external_stats.revision and self._external_refresh_timer <= 0 then
+        self._external_rebuild = nil
+        self:_build()
     end
 
     if input_service and input_service:get("hotkey_menu_special_1") and mod.scoreboard_detail_available("enemy") then
@@ -529,8 +600,10 @@ ASView.update = function(self, dt, t, input_service)
                 self._last_title_text = title_text
                 self._title_widget.content.title = title_text
                 local Render = mod:get_render()
-                Render.fit_title_widget(self, nil, self._title_widget, title_text,
-                    self._title_max_font_size, self._title_max_width)
+                if Render then
+                    Render.fit_title_widget(self, nil, self._title_widget, title_text,
+                        self._title_max_font_size, self._title_max_width)
+                end
             end
         end
     end
@@ -542,6 +615,9 @@ end
 
 ASView.draw = function(self, dt, t, input_service, layer)
     ASView.super.draw(self, dt, t, input_service, layer)
+    if self._talent_tree and not self._temporarily_hidden then
+        self._talent_tree:draw(dt, input_service, layer)
+    end
 end
 
 ASView._draw_widgets = function(self, dt, t, input_service, ui_renderer, render_settings)

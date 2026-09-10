@@ -1,4 +1,68 @@
+---@class AnotherScoreboardMod: DMFMod
 local mod = get_mod("AnotherScoreboard")
+
+do
+    local External = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_external")
+    mod.external_stats_api_version = 1
+    mod.external_stats = External
+
+    ---@param owner DMFMod
+    ---@param definition ASExternalGroupDefinition
+    ---@return string? key
+    ---@return string? error_code
+    function mod:register_external_group(owner, definition)
+        return External.register_group(owner, definition)
+    end
+
+    ---@param owner DMFMod
+    ---@param definition ASExternalStatDefinition
+    ---@return string? key
+    ---@return string? error_code
+    function mod:register_external_stat(owner, definition)
+        return External.register_stat(owner, definition)
+    end
+
+    ---@param key string
+    ---@param player_id string
+    ---@param value number|string
+    ---@return boolean? success
+    ---@return string? error_code
+    function mod:update_external_stat(key, player_id, value)
+        if not self:is_enabled() then return nil, "scoreboard_disabled" end
+        return External.update(key, player_id, value)
+    end
+
+    ---@param key string
+    ---@param player_id? string
+    ---@return number|string|table<string, number|string>|nil value Scalar or copied player-value map; nil without error means missing.
+    ---@return string? error_code
+    function mod:get_external_stat(key, player_id)
+        return External.get(key, player_id)
+    end
+
+    ---@param owner DMFMod
+    ---@param callback? fun(owner: DMFMod, scoreboard: AnotherScoreboardMod)
+    ---@return boolean? success
+    ---@return string? error_code
+    function mod:set_external_stat_collector(owner, callback)
+        return External.set_collector(owner, callback)
+    end
+
+    ---@param owner DMFMod
+    ---@return boolean? success
+    ---@return string? error_code
+    function mod:unregister_external_provider(owner)
+        return External.unregister(owner)
+    end
+
+    function mod.toggle_external_details()
+        local hud = Managers.ui and Managers.ui:get_hud()
+        local overlay = hud and hud:element("HudElementTacticalOverlay")
+        if not overlay or not overlay._active then return end
+        External.details_expanded = not External.details_expanded
+        External.revision = External.revision + 1
+    end
+end
 
 local CLASS              = CLASS
 local pairs              = pairs
@@ -501,6 +565,7 @@ local function _hide_boss_popup()
 end
 
 local function _reset_runtime_state()
+    mod.external_stats.details_expanded = false
     if _Stats then
         _Stats.clear()
     end
@@ -1589,6 +1654,10 @@ local function _filter_scoreboard_sections(sections, show_all_enemy_rows, show_a
         if not _is_effectiveness_section(section) then
             local section_key = _section_key(section)
             local rows = {}
+            local external_parents = {}
+            for _, row in ipairs(section.rows) do
+                if row.external_group and row.parent then external_parents[row.parent] = true end
+            end
 
             for _, row in ipairs(section.rows) do
                 local enemy_detail = _Stats and _Stats.is_enemy_detail(row.id)
@@ -1610,6 +1679,7 @@ local function _filter_scoreboard_sections(sections, show_all_enemy_rows, show_a
                 end
 
                 local heading_visible = _scoreboard_heading_visible(row.id)
+                if external_parents[row.id] then heading_visible = true end
                 local setting_visible = heading_visible == nil and _scoreboard_stat_visible(visibility_stat_id)
                     or heading_visible
                 local row_visible = enemy_row_visible and dot_row_visible and boss_row_visible
@@ -2365,6 +2435,12 @@ local function _save_history_snapshot(players)
         return
     end
 
+    if mod:is_enabled() then
+        local errors = mod.external_stats.collect(mod)
+        for provider, err in pairs(errors) do
+            mod:warning("External stats collector %s failed: %s", provider, err)
+        end
+    end
     local sections = _history_sections(players)
     if not sections then
         return
@@ -2459,6 +2535,8 @@ local function _rebuild_hud(hud, ui_renderer)
     hud._as_widgets = {}
     hud._as_title_widget = nil
     hud._as_runtime_stat_revision = _runtime_stat_revision
+    hud._as_external_revision = mod.external_stats.revision
+    hud._as_external_refresh_timer = 0.25
 
     local players, n = {}, 0
     local pm = Managers.player
@@ -2481,6 +2559,7 @@ local function _rebuild_hud(hud, ui_renderer)
     _Stats.validate(ids)
 
     local sections = _filter_scoreboard_sections(_Stats.sections())
+    sections = mod.external_stats.filter(sections, nil, mod.external_stats.details_expanded)
     local widgets = _Render.build_hud_widgets(hud, ui_renderer, players, sections, _scoreboard_render_settings())
     if widgets then
         hud._as_widgets = widgets
@@ -2813,6 +2892,11 @@ function(func, self, dt, t, ui_renderer, render_settings, input_service, ...)
     if self._active and self._as_runtime_stat_revision ~= _runtime_stat_revision then
         _rebuild_hud(self, ui_renderer)
     end
+    self._as_external_refresh_timer = (self._as_external_refresh_timer or 0) - dt
+    if self._active and self._as_external_revision ~= mod.external_stats.revision
+        and self._as_external_refresh_timer <= 0 then
+        _rebuild_hud(self, ui_renderer)
+    end
     if self._as_widgets then
         local hub = _is_hub()
         for i = 1, #self._as_widgets do
@@ -3096,7 +3180,17 @@ function mod.on_all_mods_loaded()
             game_world_blur = 0,
             load_always = true,
             load_in_hub = true,
-            package = "packages/ui/views/options_view/options_view",
+            package = {
+                "packages/ui/views/options_view/options_view",
+                "packages/ui/views/talent_builder_view/talent_builder_view",
+                "packages/ui/views/talent_builder_view/veteran",
+                "packages/ui/views/talent_builder_view/zealot",
+                "packages/ui/views/talent_builder_view/psyker",
+                "packages/ui/views/talent_builder_view/ogryn",
+                "packages/ui/views/talent_builder_view/adamant",
+                "packages/ui/views/talent_builder_view/broker",
+                "packages/ui/views/talent_builder_view/cryptic",
+            },
             path = "AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_view",
             state_bound = false,
             enter_sound_events = { "wwise/events/ui/play_ui_enter_short" },

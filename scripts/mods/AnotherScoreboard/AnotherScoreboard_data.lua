@@ -94,6 +94,9 @@ return {
     is_togglable     = true,
     allow_rehooking  = true,
     options = { widgets = {
+        { setting_id = "external_details_key", type = "keybind", default_value = { "j" },
+          title = "external_details_key", tooltip = "external_details_key_description",
+          keybind_trigger = "pressed", keybind_type = "function_call", function_name = "toggle_external_details" },
         { setting_id = "open_scoreboard_history", type = "keybind", default_value = { "f5" },
           title = "open_scoreboard_history", tooltip = "open_scoreboard_history_tooltip",
           keybind_trigger = "pressed", keybind_type = "function_call", function_name = "open_scoreboard_history" },

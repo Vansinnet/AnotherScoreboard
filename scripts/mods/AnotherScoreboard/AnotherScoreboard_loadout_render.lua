@@ -9,10 +9,9 @@ local PLAYER_COLORS = {
     { 255, 139, 164, 255 },
 }
 local SIGNATURES = { "blitz", "aura", "ability", "keystone" }
-local SPECIAL = { tactical = true, aura = true, ability = true, keystone = true }
 local W, H = 1120, 680
 
-function LoadoutRender.build(host, scenegraph_id, players, selected_player, show_tree, selected_talent, settings)
+function LoadoutRender.build(host, scenegraph_id, players, selected_player, show_tree, settings)
     local Render = mod:get_render()
     Render.set_theme(settings and settings.scoreboard_theme)
     local C = Render.theme_colors()
@@ -88,34 +87,21 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
     local player = players[player_index]
     local snapshot = player and player.loadout_snapshot
     local player_color = PLAYER_COLORS[player_index]
-    local entries, talent_by_id = {}, {}
-    for i, layout in ipairs(snapshot and snapshot.layouts or {}) do
-        for j, node in ipairs(layout.nodes or {}) do
+    local talent_by_id = {}
+    for _, layout in ipairs(snapshot and snapshot.layouts or {}) do
+        for _, node in ipairs(layout.nodes or {}) do
             if (node.tier or 0) > 0 then
-                entries[#entries + 1] = { node = node, layout = i, order = j }
                 if node.talent_id then
                     talent_by_id[node.talent_id] = node
                 end
             end
         end
     end
-    table.sort(entries, function(a, b)
-        if a.layout ~= b.layout then return a.layout < b.layout end
-        if (a.node.y or 0) ~= (b.node.y or 0) then return (a.node.y or 0) < (b.node.y or 0) end
-        if (a.node.x or 0) ~= (b.node.x or 0) then return (a.node.x or 0) < (b.node.x or 0) end
-        if tostring(a.node.id) ~= tostring(b.node.id) then return tostring(a.node.id) < tostring(b.node.id) end
-        return a.order < b.order
-    end)
-    local has_tree = #entries > 0
     for _, talent in ipairs(snapshot and snapshot.talents or {}) do
         if talent.id and not talent_by_id[talent.id] then
             talent_by_id[talent.id] = talent
         end
-        if not has_tree then
-            entries[#entries + 1] = { node = talent }
-        end
     end
-    local talent_index = math.max(1, math.min(#entries, math.floor(selected_talent or 1)))
 
     rect(0, 0, W, H, opaque(C.panel), 100)
     rect(0, 0, W, 2, C.title, 104)
@@ -131,7 +117,18 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
         rect(x + 1, 67, 34, 42, chosen and color or opaque(C.panel), 105)
         text(i, x + 5, 77, 26, 24, 17, chosen and opaque(C.panel) or color, false, "center")
         local name = type(players[i].name) == "function" and players[i]:name() or players[i].name
-        text(name or "-", x + 46, 77, 199, 24, 17, color)
+        text(players[i].string_symbol or "", x + 41, 75, 28, 28, 21, color, true, "center")
+        text(name or "-", x + 75, 77, 170, 24, 17, color)
+        passes[#passes + 1] = {
+            pass_type = "hotspot", content_id = "player_hotspot_" .. i,
+            content = { pressed_callback = function() host:_open_player_social(players[i]) end },
+            style = { offset = { x + 35, 66, 115 }, size = { 221, 44 } },
+        }
+        passes[#passes + 1] = {
+            pass_type = "hotspot", content_id = "player_select_" .. i,
+            content = { pressed_callback = function() host:_select_loadout_player(i) end },
+            style = { offset = { x, 66, 115 }, size = { 35, 44 } },
+        }
         if chosen then rect(x + 35, 108, 220, 2, color, 105) end
     end
     text(loc(show_tree and "tree" or "equipment"), 24, 125, 730, 30, 22, C.title, true)
@@ -193,100 +190,74 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
             local x = 24 + (i - 1) * 272
             card(x, 486, 256, 169, C.title)
             text(loc(category), x + 14, 498, 228, 22, 15, C.title, true)
-            local names, descriptions = {}, {}
+            local names, descriptions, icons = {}, {}, {}
             for _, id in ipairs(snapshot.signature and snapshot.signature[category] or {}) do
                 local talent = talent_by_id[id]
                 names[#names + 1] = talent and talent.name or id
                 descriptions[#descriptions + 1] = talent and talent.description or loc("no_description")
+                if talent and talent.icon then icons[#icons + 1] = talent.icon end
             end
             text(#names > 0 and table.concat(names, " / ") or loc("no_selection"), x + 14, 529, 228, 41, 18, C.label, true)
-            text(table.concat(descriptions, "\n"), x + 14, 579, 228, 72, 13, C.sub, false, nil, true)
+            for j, icon in ipairs(icons) do
+                passes[#passes + 1] = {
+                    pass_type = "texture", value = "content/ui/materials/frames/talents/talent_icon_container",
+                    style = {
+                        offset = { x + 128 - #icons * 34 + (j - 1) * 68, 578, 111 }, size = { 64, 64 },
+                        color = { 255, 255, 255, 255 },
+                        material_values = { icon = icon, frame = "content/ui/textures/frames/talents/circular_frame",
+                            icon_mask = "content/ui/textures/frames/talents/circular_frame_mask", intensity = 0, saturation = 1 },
+                    },
+                }
+            end
+            local hotspot_id = "signature_hotspot_" .. i
+            passes[#passes + 1] = {
+                pass_type = "hotspot", content_id = hotspot_id,
+                style = { offset = { x, 486, 115 }, size = { 256, 169 } },
+            }
+            local first = #passes + 1
+            card(170, 170, 780, 304, C.title)
+            text(table.concat(names, " / "), 190, 184, 740, 50, 23, C.title, true)
+            local remaining = table.concat(descriptions, "\n\n"):gsub("{#[^}]*}", "")
+            local pages = {}
+            local tooltip_style = { font_type = "proxima_nova_bold", font_size = math.max(14, math.floor(18 * text_scale)) }
+            while remaining ~= "" do
+                local low, high, best = 1, Utf8.string_length(remaining), 1
+                while low <= high do
+                    local middle = math.floor((low + high) / 2)
+                    local _, height = host:_text_size(Utf8.sub_string(remaining, 1, middle), tooltip_style, { 740, 100000 }, true)
+                    if height <= 190 then best, low = middle, middle + 1 else high = middle - 1 end
+                end
+                pages[#pages + 1] = Utf8.sub_string(remaining, 1, best)
+                remaining = Utf8.sub_string(remaining, best + 1)
+            end
+            local page_first = #passes + 1
+            for page, value in ipairs(pages) do
+                text(value, 190, 239, 740, 200, tooltip_style.font_size / text_scale, C.label)
+                local page_pass = passes[#passes]
+                page_pass.visibility_function = function(content)
+                    return content[hotspot_id].is_hover and (content[hotspot_id].page or 1) == page
+                end
+            end
+            passes[#passes + 1] = {
+                pass_type = "text", value = #pages > 1 and mod:localize("loadout_hover_scroll") or "",
+                style = { offset = { 190, 445, 110 }, size = { 740, 24 }, font_type = "proxima_nova_bold",
+                    font_size = 14, text_color = C.sub },
+            }
+            -- The view consumes wheel input over the card before player navigation.
+            passes[first - 1].content = { page = 1, pages = #pages }
+            for index = first, #passes do
+                passes[index].style.offset[3] = passes[index].style.offset[3] + 100
+                if index < page_first or not passes[index].visibility_function then
+                    passes[index].visibility_function = function(content) return content[hotspot_id].is_hover end
+                end
+            end
         end
     else
-        card(24, 168, 646, 487)
-        card(686, 168, 410, 487, player_color)
-        if has_tree then
-            local groups, group_order = {}, {}
-            for index, entry in ipairs(entries) do
-                local group = groups[entry.layout]
-                if not group then
-                    group = { nodes = {}, by_id = {}, min_x = math.huge, max_x = -math.huge, min_y = math.huge, max_y = -math.huge }
-                    groups[entry.layout] = group
-                    group_order[#group_order + 1] = entry.layout
-                end
-                local node = entry.node
-                local point = { node = node, index = index }
-                group.nodes[#group.nodes + 1] = point
-                if node.id then group.by_id[node.id] = point end
-                group.min_x, group.max_x = math.min(group.min_x, node.x or 0), math.max(group.max_x, node.x or 0)
-                group.min_y, group.max_y = math.min(group.min_y, node.y or 0), math.max(group.max_y, node.y or 0)
-            end
-            local lane_w = 610 / #group_order
-            for lane, layout_index in ipairs(group_order) do
-                local group = groups[layout_index]
-                local range_x, range_y = group.max_x - group.min_x, group.max_y - group.min_y
-                local scale = math.min((lane_w - 32) / math.max(range_x, 1), 404 / math.max(range_y, 1))
-                local center_x = 42 + (lane - 0.5) * lane_w
-                for _, point in ipairs(group.nodes) do
-                    point.x = center_x + ((point.node.x or 0) - (group.min_x + group.max_x) * 0.5) * scale
-                    point.y = 398 + ((point.node.y or 0) - (group.min_y + group.max_y) * 0.5) * scale
-                end
-                local linked = {}
-                for _, point in ipairs(group.nodes) do
-                    for _, key in ipairs({ "parents", "children" }) do
-                        for _, id in ipairs(point.node[key] or {}) do
-                            local other = group.by_id[id]
-                            if other and other ~= point then
-                                local edge = math.min(point.index, other.index) .. ":" .. math.max(point.index, other.index)
-                                if not linked[edge] then
-                                    linked[edge] = true
-                                    local mid_y = (point.y + other.y) * 0.5
-                                    local color = (point.index == talent_index or other.index == talent_index) and player_color or C.accent
-                                    rect(point.x - 1, math.min(point.y, mid_y), 2, math.max(1, math.abs(point.y - mid_y)), color, 105)
-                                    rect(math.min(point.x, other.x), mid_y - 1, math.max(2, math.abs(point.x - other.x)), 2, color, 105)
-                                    rect(other.x - 1, math.min(other.y, mid_y), 2, math.max(1, math.abs(other.y - mid_y)), color, 105)
-                                end
-                            end
-                        end
-                    end
-                end
-                for _, point in ipairs(group.nodes) do
-                    local selected = point.index == talent_index
-                    local special = SPECIAL[point.node.type]
-                    local spacing = math.huge
-                    for _, other in ipairs(group.nodes) do
-                        if other ~= point then
-                            spacing = math.min(spacing, math.max(math.abs(point.x - other.x), math.abs(point.y - other.y)))
-                        end
-                    end
-                    -- Dense lower branches must retain distinct nodes at overview scale.
-                    local size = math.min(special and 18 or 14, math.max(1, spacing - 2))
-                    local border = math.min(2, size / 4)
-                    local color = selected and player_color or special and C.title or C.accent
-                    rect(point.x - size / 2, point.y - size / 2, size, size, color, 107)
-                    rect(point.x - size / 2 + border, point.y - size / 2 + border,
-                        size - border * 2, size - border * 2, selected and player_color or opaque(C.panel), 108)
-                end
-            end
-            text(string.format("%02d / %02d", #entries > 0 and talent_index or 0, #entries), 42, 622, 610, 22, 13, C.sub, false, "center")
-        else
-            text(loc("tree_missing"), 44, 186, 606, 69, 19, C.sub, true)
-            local first = math.max(1, math.min(talent_index - 6, #entries - 12))
-            for index = first, math.min(#entries, first + 12) do
-                local y = 267 + (index - first) * 28
-                if index == talent_index then rect(40, y, 614, 27, opaque(C.panel), 105) end
-                text(string.format("%02d", index), 48, y + 3, 34, 24, 14, index == talent_index and player_color or C.sub)
-                text(entries[index].node.name or entries[index].node.id, 94, y + 3, 546, 24, 15,
-                    index == talent_index and player_color or C.label)
-            end
+        card(24, 168, 1072, 487, player_color)
+        if host._loadout_tree_error then
+            text(host._loadout_tree_error,
+                154, 280, 812, 240, 22, C.sub, true, "center")
         end
-        local selected = entries[talent_index] and entries[talent_index].node
-        text(string.format("%02d / %02d", selected and talent_index or 0, #entries), 710, 188, 362, 24, 15, player_color)
-        text(selected and (selected.name or selected.talent_id or selected.id) or loc("no_selection"),
-            710, 224, 362, 76, 28, C.title, true)
-        rect(710, 322, 362, 1, C.accent, 104)
-        text(selected and selected.description or loc("no_description"), 710, 342, 362, 262, 19, C.label)
-        text("[LEFT / RIGHT]", 710, 623, 362, 22, 13, C.sub, false, "right")
     end
 
     return {
@@ -294,7 +265,6 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
         panel = { x = (900 - W) / 2, y = 0, w = W, h = H },
         content_height = H + 42,
         text_scale = text_scale,
-        talent_count = #entries,
     }
 end
 

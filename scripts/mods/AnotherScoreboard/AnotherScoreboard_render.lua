@@ -1,3 +1,4 @@
+---@type AnotherScoreboardMod
 local mod = get_mod("AnotherScoreboard")
 
 local pairs              = pairs
@@ -291,7 +292,7 @@ local function _row_player_data(row, ids, num_players)
             if type(value) == "table" then
                 score = value.score or value.value or 0
                 if ranked and value.best then vc = C.best end
-                if ranked and value.worst and score ~= 0 then vc = C.worst end
+                if ranked and value.worst and (row.external or score ~= 0) then vc = C.worst end
             else
                 score = value or 0
             end
@@ -306,6 +307,7 @@ local function _row_player_data(row, ids, num_players)
         end
 
         player_data[pi] = { score = score, percentage = percentage, color = vc }
+        if row.external and not (row.values and row.values[aid]) then player_data[pi].score = nil end
     end
 
     return player_data
@@ -328,6 +330,16 @@ local function _add_row_passes(passes, row, row_key, row_y, layout, label_x, lab
     local label_color = full_width and C.section or depth >= 2 and C.label_nested or child and C.label_sub or C.label
     local player_data = _row_player_data(row, ids, num_players)
     local rtext = _row_label(row, player_data)
+    if row.external_group and row.collapsible then
+        rtext = (row.external_collapsed and "+ " or "− ") .. rtext
+        if not ui_renderer and host and host._toggle_external_group then
+            passes[#passes + 1] = {
+                pass_type = "hotspot", content_id = "external_hotspot_" .. row_key,
+                content = { pressed_callback = function() host:_toggle_external_group(row.id, row.external_collapsed) end },
+                style = { offset = { label_x, row_y, BASE_Z + 9 }, size = { label_w, rh } },
+            }
+        end
+    end
 
     if row_background then
         passes[#passes + 1] = _rect(ox, row_y, BASE_Z + 2, layout.w, rh, row_background)
@@ -366,7 +378,8 @@ local function _add_row_passes(passes, row, row_key, row_y, layout, label_x, lab
         for pi = 1, num_players do
             local col_x = ox + gap + label_w + gap + (pi - 1) * (col_w + gap)
             local pd = player_data[pi]
-            local value_text = _row_value(row, pd.score, pd.percentage)
+            local value_text = row.external and mod.external_stats.format(row, pd.score)
+                or _row_value(row, pd.score, pd.percentage)
             local value_fs = _fit_label_font_size(host, ui_renderer, value_text, "proxima_nova_bold", fs,
                 col_w - _scaled(2), rh)
 
@@ -384,6 +397,14 @@ local function _add_player_header_passes(passes, players, ids, layout, ox, heade
     for pi = 1, num_players do
         local aid = ids[pi]
         local col_x = ox + gap + label_w + gap + (pi - 1) * (col_w + gap)
+        if not ui_renderer and host and host._open_player_social then
+            local player = players[pi]
+            passes[#passes + 1] = {
+                pass_type = "hotspot", content_id = "player_hotspot_" .. pi,
+                content = { pressed_callback = function() host:_open_player_social(player) end },
+                style = { offset = { col_x, header_y, BASE_Z + 9 }, size = { col_w, header_h } },
+            }
+        end
         local name_color = PLAYER_COLORS[pi] or PLAYER_COLORS[1]
         local icon = _player_archetype_icon(players[pi])
         local icon_h = icon and math_floor(header_h * 0.42) or 0
@@ -422,7 +443,7 @@ local function _combined_panel_passes(players, ids, sections, layout, ox, oy, al
 
     for si = 1, #sections do
         local section = sections[si]
-        local cat_text = mod:localize(section.category.label) or section.category.key
+        local cat_text = section.category.label_text or mod:localize(section.category.label) or section.category.key
         local section_font_size = _fit_label_font_size(host, ui_renderer, cat_text, "itc_novarese_bold",
             _dim.section_font, layout.w - _scaled(4), _dim.section_h)
         local detail_row_index = 0

@@ -1,4 +1,6 @@
+---@type AnotherScoreboardMod
 local mod = get_mod("AnotherScoreboard")
+local External = mod.external_stats
 
 local pairs              = pairs
 local ipairs             = ipairs
@@ -567,6 +569,7 @@ function Stats.ensure_entries(account_ids)
 end
 
 function Stats.validate(account_ids)
+    External.validate(account_ids)
     for _, def in ipairs(STAT_DEFS) do
         if def.ranked ~= false then
             VALIDATORS[def.dir](_data[def.id], account_ids)
@@ -575,6 +578,7 @@ function Stats.validate(account_ids)
 end
 
 function Stats.clear()
+    External.reset()
     for _, def in ipairs(STAT_DEFS) do
         table_clear(_data[def.id])
     end
@@ -585,6 +589,7 @@ function Stats.clear()
 end
 
 function Stats.has_active_run_data()
+    if External.has_data() then return true end
     for _, def in ipairs(STAT_DEFS) do
         for _, entry in pairs(_data[def.id]) do
             if entry and ((entry.value or 0) ~= 0 or (entry.score or 0) ~= 0) then
@@ -617,6 +622,7 @@ function Stats.export_active_run()
     return {
         version = 1,
         stats = stats,
+        external = External.export(),
         boss_damage_by_type = _copy_boss_damage_by_type(_boss_damage_by_type) or {},
     }
 end
@@ -625,6 +631,8 @@ function Stats.import_active_run(snapshot)
     if type(snapshot) ~= "table" or snapshot.version ~= 1 or type(snapshot.stats) ~= "table" then
         return false
     end
+
+    if not External.validate_snapshot(snapshot.external) then return false end
 
     local imported = {}
 
@@ -683,6 +691,7 @@ function Stats.import_active_run(snapshot)
 
 
     _boss_damage_by_type = boss_damage_by_type
+    External.restore(snapshot.external)
 
     return true
 end
@@ -760,7 +769,7 @@ function Stats.sections()
             result[#result + 1] = { category = cat, rows = rows }
         end
     end
-    return result
+    return External.inject(result)
 end
 
 function Stats.data_for(stat_id)
@@ -811,6 +820,16 @@ function Stats.snapshot_sections(account_ids, sections)
                 ranked = row.ranked,
                 no_values = row.no_values,
                 suffix = row.suffix,
+                decimals = row.decimals,
+                external = row.external,
+                external_group = row.external_group,
+                placement = row.placement,
+                group = row.group,
+                value_type = row.value_type,
+                accumulation = row.accumulation,
+                ranking = row.ranking,
+                collapsible = row.collapsible,
+                collapsed_by_default = row.collapsed_by_default,
                 full_width = row.full_width,
                 height_scale = row.height_scale,
                 font_scale = row.font_scale,
@@ -821,7 +840,7 @@ function Stats.snapshot_sections(account_ids, sections)
                 snapshot_row.percentage_values = {}
             end
 
-            for aid in pairs(account_ids) do
+            for aid in pairs(row.external and row.values or account_ids) do
                 local row_value = nil
 
                 if row.values then
@@ -833,7 +852,7 @@ function Stats.snapshot_sections(account_ids, sections)
                             best = value.best or value.is_best or false,
                             worst = value.worst or value.is_worst or false,
                         }
-                    else
+                    elseif value ~= nil or not row.external then
                         row_value = {
                             score = value or 0,
                             best = false,
@@ -865,6 +884,7 @@ function Stats.snapshot_sections(account_ids, sections)
             category = {
                 key = section.category.key,
                 label = section.category.label,
+                label_text = section.category.label_text,
             },
             rows = snapshot_rows,
         }
