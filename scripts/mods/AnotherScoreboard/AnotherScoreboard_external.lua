@@ -345,7 +345,10 @@ function External.inject(sections)
                     end
                 end
             else
-                sections[#sections + 1] = { category = { key = key, label_text = group.label_text }, rows = rows }
+                sections[#sections + 1] = {
+                    category = { key = key, label_text = group.label_text, uppercase = true },
+                    rows = rows,
+                }
             end
         end
     end

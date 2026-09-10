@@ -885,6 +885,7 @@ function Stats.snapshot_sections(account_ids, sections)
                 key = section.category.key,
                 label = section.category.label,
                 label_text = section.category.label_text,
+                uppercase = section.category.uppercase,
             },
             rows = snapshot_rows,
         }

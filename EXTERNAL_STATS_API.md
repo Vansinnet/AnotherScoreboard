@@ -59,7 +59,7 @@ Group and stat identifiers have separate namespaces. The same stat ID under anot
 |---|---|
 | `id` | Required provider-local identifier. |
 | `label` | Required resolved display text, 1–256 bytes, no control characters. |
-| `placement` | `survivability`, `combat_utility`, `survival_utility`, or `own` (default). `own` creates a separate category using the group's label. |
+| `placement` | `survivability`, `combat_utility`, `survival_utility`, or `own` (default). `own` creates a separate category whose heading displays the group's label in uppercase; the collapsible group row preserves the label exactly as supplied. |
 | `collapsible` | Boolean, default `true`. |
 | `collapsed_by_default` | Boolean, default `true` for collapsible groups and `false` otherwise. Cannot be `true` when `collapsible = false`. |
 

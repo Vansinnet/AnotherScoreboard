@@ -444,6 +444,7 @@ local function _combined_panel_passes(players, ids, sections, layout, ox, oy, al
     for si = 1, #sections do
         local section = sections[si]
         local cat_text = section.category.label_text or mod:localize(section.category.label) or section.category.key
+        if section.category.uppercase then cat_text = Utf8.upper(cat_text) end
         local section_font_size = _fit_label_font_size(host, ui_renderer, cat_text, "itc_novarese_bold",
             _dim.section_font, layout.w - _scaled(4), _dim.section_h)
         local detail_row_index = 0
