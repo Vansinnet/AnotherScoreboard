@@ -9,7 +9,7 @@ local CircumstanceTemplates = mod:original_require("scripts/settings/circumstanc
 
 local History = {}
 
-local MAX_ENTRIES = 10
+local DEFAULT_CAPACITY = 10
 local VERSION = 1
 local INDEX_FILE = "index.lua"
 local SAVED_INDEX_FILE = "saved_index.lua"
@@ -20,6 +20,7 @@ local LEGACY_SAVED_DIRECTORY = "saved/"
 local cached_entries = {}
 local cached_saved_entries = {}
 local cache_ready = false
+local cached_capacity = DEFAULT_CAPACITY
 local pending_clear_paths = {}
 
 local HIDDEN_HAVOC_CIRCUMSTANCES = {
@@ -948,7 +949,20 @@ load_file = function(path)
     return data
 end
 
+function History.recent_capacity()
+    local capacity = mod:get("history_recent_capacity")
+    if type(capacity) == "number" and capacity >= 10 and capacity <= 100 and capacity % 10 == 0 then
+        return capacity
+    end
+
+    return DEFAULT_CAPACITY
+end
+
 function History.list()
+    if cache_ready and cached_capacity ~= History.recent_capacity() and #pending_clear_paths == 0 then
+        History.refresh_cache(true)
+    end
+
     return cached_entries
 end
 
@@ -976,14 +990,15 @@ end
 
 function History.refresh_cache(rebuild_from_files)
     local path = appdata_path()
+    local capacity = History.recent_capacity()
     local entries
     local saved_entries
 
     if path and directory_exists(path) then
-        entries = load_index(path, MAX_ENTRIES)
+        entries = load_index(path)
 
         if not entries and rebuild_from_files then
-            entries = build_index_from_files(path, MAX_ENTRIES)
+            entries = build_index_from_files(path)
         end
 
         saved_entries = load_index(path, nil, SAVED_INDEX_FILE, saved_history_file_info, saved_history_file_id)
@@ -999,6 +1014,10 @@ function History.refresh_cache(rebuild_from_files)
     end
 
     cached_entries = entries or {}
+    for i = #cached_entries, capacity + 1, -1 do
+        cached_entries[i] = nil
+    end
+    cached_capacity = capacity
     cached_saved_entries = saved_entries or {}
     cache_ready = true
 
@@ -1012,7 +1031,7 @@ function History.prune()
     end
 
     local files = sorted_history_files(path)
-    for i = MAX_ENTRIES + 1, #files do
+    for i = History.recent_capacity() + 1, #files do
         local file_path = files[i].file_path
         if file_path and file_exists(file_path) then
             _os.remove(file_path)
@@ -1300,7 +1319,8 @@ function History.save(snapshot)
         return false
     end
 
-    local source_entries = load_index(path, MAX_ENTRIES) or cached_entries or {}
+    local capacity = History.recent_capacity()
+    local source_entries = load_index(path) or cached_entries or {}
     local entries = {}
     for i = 1, #source_entries do
         entries[i] = source_entries[i]
@@ -1309,7 +1329,7 @@ function History.save(snapshot)
     table.sort(entries, summary_sort)
 
     local pruned_paths = {}
-    for i = #entries, MAX_ENTRIES + 1, -1 do
+    for i = #entries, capacity + 1, -1 do
         local old_path = entries[i].file_path
         pruned_paths[#pruned_paths + 1] = old_path
         entries[i] = nil
@@ -1328,7 +1348,9 @@ function History.save(snapshot)
     end
 
     cached_entries = entries
+    cached_capacity = capacity
     cache_ready = true
+    History.prune()
 
     return true, file_path
 end

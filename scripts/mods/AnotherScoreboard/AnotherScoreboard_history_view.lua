@@ -199,8 +199,8 @@ function HistoryView:init(settings, context)
     self._entry_widgets = {}
     self._tab_widgets = {}
     self._active_tab = "recent"
-    self._saved_first_entry = 1
-    self._saved_max_first_entry = 1
+    self._first_entries = { recent = 1, saved = 1 }
+    self._max_first_entries = { recent = 1, saved = 1 }
     self._popup_id = nil
     HistoryView.super.init(self, self._definitions, settings, context or {})
     self._pass_draw = true
@@ -250,11 +250,11 @@ function HistoryView:update(dt, t, input_service)
         end
     end
 
-    if self._active_tab == "saved" and input_service then
+    if input_service then
         local scroll_axis = input_service:get("scroll_axis")
         local scroll = scroll_axis and scroll_axis[2] or 0
         if scroll ~= 0 then
-            self:_change_saved_scroll(scroll > 0 and -1 or 1)
+            self:_change_scroll(scroll > 0 and -1 or 1)
         end
     end
 
@@ -519,11 +519,12 @@ function HistoryView:_apply_saved_action(action)
     end
 end
 
-function HistoryView:_change_saved_scroll(delta)
-    local first_entry = math.max(1, math.min(self._saved_first_entry + delta, self._saved_max_first_entry))
+function HistoryView:_change_scroll(delta)
+    local tab = self._active_tab
+    local first_entry = math.max(1, math.min(self._first_entries[tab] + delta, self._max_first_entries[tab]))
 
-    if first_entry ~= self._saved_first_entry then
-        self._saved_first_entry = first_entry
+    if first_entry ~= self._first_entries[tab] then
+        self._first_entries[tab] = first_entry
         self._rebuild_requested = true
     end
 end
@@ -533,28 +534,34 @@ function HistoryView:_build()
     self:_cleanup()
 
     local History = self:_history()
+    if not History then
+        return
+    end
+
     local recent_entries = History.list()
     local saved_entries = History.saved_list and History.saved_list() or {}
     local entries = self._active_tab == "saved" and saved_entries or recent_entries
     local cache_ready = not History.cache_ready or History.cache_ready()
     self._history_cache_ready = cache_ready
-    local max_first_entry = math.max(1, #saved_entries - MAX_VISIBLE_ENTRIES + 1)
-    self._saved_max_first_entry = max_first_entry
-    self._saved_first_entry = math.min(self._saved_first_entry, max_first_entry)
-    local first_entry = self._active_tab == "saved" and self._saved_first_entry or 1
-    local subtitle_id = self._active_tab == "saved" and "history_saved_subtitle" or "history_view_subtitle"
+    local tab = self._active_tab
+    local max_first_entry = math.max(1, #entries - MAX_VISIBLE_ENTRIES + 1)
+    self._max_first_entries[tab] = max_first_entry
+    self._first_entries[tab] = math.min(self._first_entries[tab], max_first_entry)
+    local first_entry = self._first_entries[tab]
+    local subtitle = tab == "saved" and mod:localize("history_saved_subtitle")
+        or mod:localize("history_view_subtitle", History.recent_capacity())
     local hint_id = self._active_tab == "saved" and "history_saved_hint" or "history_escape_hint"
     local last_entry = math.min(#entries, first_entry + MAX_VISIBLE_ENTRIES - 1)
 
     local background_passes = {
         rect_pass(0, 0, BASE_Z - 1, VIEW_W, VIEW_H, COLORS.panel),
         text_pass("title", mod:localize("history_view_title"), 36, 18, BASE_Z + 4, VIEW_W - 72, 42, 30, COLORS.title),
-        text_pass("subtitle", mod:localize(subtitle_id), 38, 56, BASE_Z + 4, VIEW_W - 76, 24, 16, COLORS.sub),
+        text_pass("subtitle", subtitle, 38, 56, BASE_Z + 4, VIEW_W - 76, 24, 16, COLORS.sub),
         rect_pass(0, VIEW_H - FOOTER_H, BASE_Z + 2, VIEW_W, FOOTER_H, COLORS.footer),
         text_pass("hint", mod:localize(hint_id), 16, VIEW_H - 36, BASE_Z + 4, 560, 24, 15, COLORS.text),
     }
 
-    if self._active_tab == "saved" and #entries > MAX_VISIBLE_ENTRIES then
+    if #entries > MAX_VISIBLE_ENTRIES then
         local range_text = string.format("%d-%d / %d", first_entry, last_entry, #entries)
         background_passes[#background_passes + 1] = text_pass("range", range_text, 700, VIEW_H - 36, BASE_Z + 4, 164, 24, 15, COLORS.text, "center", "right")
     end

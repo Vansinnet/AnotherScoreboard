@@ -2,17 +2,17 @@ local mod = get_mod("AnotherScoreboard")
 local enemies = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_enemies")
 
 local localization = {
-    external_details_key = { 
+    external_details_key = {
 		en = "External stat details (Tab scoreboard)",
 		["zh-cn"] = "外部统计详情（Tab 记分板）",
 	},
-    external_details_key_description = { 
-		en = "Toggle all collapsible external stat groups in the in-mission Tab scoreboard. End screens and history use clickable group headings.", 
-		["zh-cn"] = "切换任务中 Tab 记分板内所有可折叠的外部统计分组。结算界面和历史记录可点击分组标题。", 
+    external_details_key_description = {
+		en = "Toggle all collapsible external stat groups in the in-mission Tab scoreboard. End screens and history use clickable group headings.",
+		["zh-cn"] = "切换任务中 Tab 记分板内所有可折叠的外部统计分组。结算界面和历史记录可点击分组标题。",
 	},
-    loadout_title = { 
-		en = "Squad Loadouts", 
-		["zh-cn"] = "小队配装", 
+    loadout_title = {
+		en = "Squad Loadouts",
+		["zh-cn"] = "小队配装",
 	},
     loadout_equipment = {
         en = "Weapons & Signature Talents",
@@ -561,7 +561,7 @@ local localization = {
 	},
 	live_header_critical_ratio = {
 	    en = "Critical %%",
-	    ["zh-cn"] = "暴击 %",
+	    ["zh-cn"] = "暴击 %%",
 	},
 	live_header_weakspots = {
 	    en = "Weakspots",
@@ -569,7 +569,7 @@ local localization = {
 	},
 	live_header_weakspot_ratio = {
 	    en = "Weakspot %%",
-	    ["zh-cn"] = "弱点 %",
+	    ["zh-cn"] = "弱点 %%",
 	},
 	live_header_boss_damage = {
 	    en = "Boss Dmg",
@@ -1033,9 +1033,17 @@ local localization = {
 	    en = "Scoreboard History",
 	    ["zh-cn"] = "记分板历史",
 	},
+	history_recent_capacity = {
+	    en = "Recent history capacity",
+	    ["zh-cn"] = "最近历史记录容量",
+	},
+	history_recent_capacity_tooltip = {
+	    en = "Keep the latest 10–100 completed missions, in steps of 10 (default: 10). Reopen history to update the list. Excess Recent files are deleted on the next completed mission save, not when changing this setting. Saved missions are unlimited. Increasing the limit cannot restore deleted missions.",
+	    ["zh-cn"] = "保留最近完成的 10–100 个任务，每次递增 10 个（默认 10 个）。重新打开历史记录即可更新列表。超出容量的最近记录文件会在下次保存已完成任务时删除，修改设置时不会删除。已保存任务数量不限。提高容量无法恢复已删除的任务。",
+	},
 	history_view_subtitle = {
-	    en = "Latest 10 completed missions",
-	    ["zh-cn"] = "最近完成的 10 个任务",
+	    en = "Latest %d completed missions",
+	    ["zh-cn"] = "最近完成的 %d 个任务",
 	},
 	history_saved_subtitle = {
 	    en = "Missions saved for later",
@@ -1130,8 +1138,8 @@ local localization = {
 	    ["zh-cn"] = "未知难度",
 	},
 	history_escape_hint = {
-	    en = "ESC - Exit  |  SPACE - Clear History",
-	    ["zh-cn"] = "ESC - 退出  |  SPACE - 清除历史",
+	    en = "ESC - Exit  |  Mouse wheel - Scroll  |  SPACE - Clear Recent",
+	    ["zh-cn"] = "ESC - 退出  |  鼠标滚轮 - 滚动  |  SPACE - 清除最近记录",
 	},
 	history_saved_hint = {
 	    en = "ESC - Exit  |  Mouse wheel - Scroll  |  Manage saved games individually",
@@ -1151,7 +1159,7 @@ local localization = {
 	},
 	scoreboard_dot_hint = {
 	    en = "E - Specials/Elites  |  R - Hide DoT types  |  T - Boss types",
-	    ["zh-cn"] = "E - 特殊/精英  |  R - 持续伤害类型  |  T - 首领类型",
+	    ["zh-cn"] = "E - 特殊/精英  |  R - 隐藏持续伤害类型  |  T - 首领类型",
 	},
 	scoreboard_boss_hint = {
 	    en = "E - Specials/Elites  |  R - DoT types  |  T - Hide boss types",

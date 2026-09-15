@@ -65,13 +65,15 @@ Damage, percentage, total, scale, duration, position, and background opacity are
 
 ### Persistent Scoreboard History
 
-AnotherScoreboard saves completed missions that reach the ending screen and retains the latest 10 entries in the **Recent** tab.
+AnotherScoreboard saves completed missions that reach the ending screen. **Recent history capacity**, next to the history keybind in Mod Options, selects 10–100 entries in steps of 10 (default: 10).
+
+Reopen history after changing the capacity to refresh the list; the next completed mission save also uses the new limit. Changing the setting or reopening history does not delete excess Recent files. They are pruned on the next completed mission save. Increasing the limit cannot restore missions already deleted. Use the mouse wheel to scroll Recent or Saved; each tab remembers its own position while history is open.
 
 Open Scoreboard History with **F5** by default while in the Mourningstar or Psykanium. The keybind can be changed in Mod Options.
 
 History entries include mission, game type, difficulty, completion time and date, players, outcome, mission conditions, Havoc rank and modifiers, and the complete recorded scoreboard. History recognizes standard missions, Auric and Maelstrom missions, Havoc, Expeditions, and Mortis Trials.
 
-Copy a Recent mission to the separate **Saved** collection to keep it permanently. Saved missions can have custom names, can be renamed later, and can be removed individually. Clearing Recent history does not remove Saved missions.
+Copy a Recent mission to the separate, unlimited **Saved** collection to keep it permanently. Saved missions can have custom names, can be renamed later, and can be removed individually. Clearing Recent history or reducing its capacity does not remove Saved missions.
 
 History files are stored locally under:
 
@@ -126,7 +128,7 @@ Hiding a built-in row affects only its display. The mod continues to track and s
 | Q | Hide or show the end-of-mission scoreboard |
 | Esc | Close history or return from Squad Loadouts |
 | Space | Clear the Recent history list |
-| Mouse wheel | Scroll Saved history; change loadout player; zoom/paginate in the talent-tree view where applicable |
+| Mouse wheel | Scroll Recent or Saved history; change loadout player; zoom/paginate in the talent-tree view where applicable |
 
 ## Requirements
 
@@ -140,8 +142,8 @@ No other mod is required. Havoc modifier colors used by Scoreboard History are i
 - Statistics are collected client-side from events visible to the mod. They are not official Fatshark or server-authoritative statistics.
 - Live Stats shows human players and supports Darktide's four-player team size.
 - Scoreboard History is available from the Mourningstar or Psykanium, not during a regular mission.
-- Recent history is limited to 10 missions. The separate Saved collection is not cleared with Recent history.
-- User-facing text is currently available in English.
+- Recent history retains 10–100 missions (default: 10). The unlimited Saved collection is not cleared with Recent history.
+- User-facing text is available in English and Simplified Chinese.
 
 ## How Statistics Are Calculated
 
