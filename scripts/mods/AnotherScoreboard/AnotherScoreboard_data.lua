@@ -77,6 +77,16 @@ local function scoreboard_stat_widgets(section)
     return widgets
 end
 
+local function history_capacity_options()
+    local options = { localize = false }
+
+    for capacity = 10, 100, 10 do
+        options[#options + 1] = { text = tostring(capacity), value = capacity }
+    end
+
+    return options
+end
+
 local function theme_options()
     local options = {}
 
@@ -100,6 +110,9 @@ return {
         { setting_id = "open_scoreboard_history", type = "keybind", default_value = { "f5" },
           title = "open_scoreboard_history", tooltip = "open_scoreboard_history_tooltip",
           keybind_trigger = "pressed", keybind_type = "function_call", function_name = "open_scoreboard_history" },
+        { setting_id = "history_recent_capacity", type = "dropdown", default_value = 10,
+          title = "history_recent_capacity", tooltip = "history_recent_capacity_tooltip",
+          options = history_capacity_options() },
         { setting_id = "scoreboard_theme_header", type = "group",
           title = "scoreboard_theme_header", tooltip = "scoreboard_theme_header_tooltip",
            sub_widgets = {
