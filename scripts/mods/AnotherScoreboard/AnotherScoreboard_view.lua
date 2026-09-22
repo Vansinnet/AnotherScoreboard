@@ -10,6 +10,7 @@ local Keyboard           = Keyboard
 local UIWorkspace = mod:original_require("scripts/settings/ui/ui_workspace_settings")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 local LoadoutRender = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_loadout_render")
+local LoadoutIcons = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_loadout_icons")
 local TalentTree = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_talent_tree")
 
 local BASE_Z = 100
@@ -246,6 +247,7 @@ ASView._build = function(self)
             registered.offset = w.offset
             self._column_widgets[i] = registered
         end
+        self._loadout_icons = LoadoutIcons.load(self._column_widgets[1], built.weapon_icons)
         self:_build_hint(built, mod:localize(self._loadout_tree and "loadout_hint_tree" or "loadout_hint_equipment"))
         _apply_scoreboard_position(self)
         self:_force_update_scenegraph()
@@ -358,6 +360,8 @@ ASView._build = function(self)
 end
 
 ASView._cleanup = function(self)
+    LoadoutIcons.destroy(self._loadout_icons)
+    self._loadout_icons = nil
     if self._talent_tree then
         self._talent_tree:destroy()
         self._talent_tree = nil
