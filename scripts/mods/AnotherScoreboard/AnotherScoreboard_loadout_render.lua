@@ -17,6 +17,7 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
     local C = Render.theme_colors()
     local text_scale = math.max(0.5, math.min(2, settings and settings.text_scale or 1))
     local passes = {}
+    local weapon_icons = {}
     local function opaque(color)
         return { 255, color[2], color[3], color[4] }
     end
@@ -177,8 +178,23 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
                     text(#lines > 0 and table.concat(lines, "\n") or loc("no_selection"),
                         x + 278, group_index == 1 and 294 or 386, 234, 59, 14, C.label)
                 end
-                text(loc("rank"), x + 16, 411, 242, 20, 12, C.sub)
-                text(weapon.rarity or "-", x + 16, 434, 242, 22, 14, C.label)
+                if weapon.master_item_name then
+                    local style_id = "weapon_icon_" .. i
+                    local size = { 242, 68 }
+                    passes[#passes + 1] = {
+                        pass_type = "texture", style_id = style_id,
+                        value = "content/ui/materials/icons/items/containers/item_container_landscape_no_rarity",
+                        style = {
+                            offset = { x + 16, 390, 105 }, size = size,
+                            color = { 0, 255, 255, 255 },
+                            material_values = { use_placeholder_texture = 1 },
+                        },
+                    }
+                    weapon_icons[#weapon_icons + 1] = {
+                        style_id = style_id, master_item_name = weapon.master_item_name,
+                        slot = slot, size = size,
+                    }
+                end
             end
         end
         for i, category in ipairs(SIGNATURES) do
@@ -256,6 +272,7 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
     end
 
     return {
+        weapon_icons = weapon_icons,
         columns = { { widget = UIWidget.create_definition(passes, scenegraph_id, nil, { W, H }), offset = { (900 - W) / 2, 0, 0 } } },
         panel = { x = (900 - W) / 2, y = 0, w = W, h = H },
         content_height = H + 42,

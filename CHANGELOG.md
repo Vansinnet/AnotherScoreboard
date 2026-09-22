@@ -6,6 +6,8 @@
 - Marked retained late departures as **Left near match end** so the result does not imply that they remained connected.
 - Kept bots on the final scoreboard when a player left earlier in the mission, preserving runs completed with a bot.
 - Marked bot columns as **Bot** and prioritized current human replacements and reconnected players over departed players.
+- Removed weapon Rank from Squad Loadouts and used the space for native weapon thumbnails rendered from Darktide's item assets.
+- New mission snapshots retain the weapon model identifier needed for thumbnails; older history entries remain compatible but do not gain images retroactively.
 
 ## 1.2.4
 

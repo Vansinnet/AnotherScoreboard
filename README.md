@@ -91,6 +91,8 @@ History files are stored locally under:
 
 On an end-of-mission or history scoreboard, press **U** to open Squad Loadouts. Player cards show class icons, weapons, and recorded signature talents. Hover a signature talent for its description; long descriptions can be paged with the mouse wheel.
 
+Weapon cards use Darktide's native item renderer to show the weapon's standard model instead of its Rank. Thumbnails are available for mission snapshots recorded by this version or later; older history entries continue to show their saved weapon details without an image.
+
 Press **T** inside Squad Loadouts to show that player's full talent tree using the game's native node, connection, icon, and tooltip styling. Use the mouse wheel to zoom, left-drag to pan, and hover a node for details. Press **1-4**, click anywhere on a player card, or use the wheel in the loadout view to change player. This view is read-only: it cannot spend or remove talent points.
 
 Talent trees come from the saved mission build. If the current game tree no longer matches the saved layout or selections, AnotherScoreboard displays a notice instead of an inaccurate tree.

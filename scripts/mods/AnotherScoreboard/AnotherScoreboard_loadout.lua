@@ -99,6 +99,7 @@ local function capture_profile(profile)
                 slot = slot,
                 name = name,
                 template_name = template_name,
+                master_item_name = item.name,
                 item_type = item.item_type,
                 rarity = item.rarity,
                 rating = tonumber((Items.expertise_level(item, true))),
