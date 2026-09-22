@@ -117,6 +117,8 @@ local _mission_elapsed_final = nil
 local _mission_metadata = {}
 local _pending_mission_board_data = nil
 local _active_run_store = mod:persistent_table("active_run", {})
+---@cast _active_run_store table
+mod._active_run_prefix_pending = _active_run_store.snapshot ~= nil
 local _state_gameplay_enter_handled = false
 local _scoreboard_history_saved = false
 local _end_player_snapshot = nil
@@ -124,6 +126,8 @@ local _coherency_last_sample = nil
 local _state_tracker = {}
 local _disabled_tracker = {}
 local _combat_ability_charges = {}
+mod._damage_taken_unit_by_account = {}
+mod._player_roster = {}
 local _runtime_stat_revision = 0
 local _enemy_aggro_targets = setmetatable({}, { __mode = "k" })
 local _aggro_baseline_pending = false
@@ -529,6 +533,8 @@ local function _clear_unit_runtime_caches()
     for k in pairs(_state_tracker) do _state_tracker[k] = nil end
     for k in pairs(_disabled_tracker) do _disabled_tracker[k] = nil end
     for k in pairs(_combat_ability_charges) do _combat_ability_charges[k] = nil end
+    for k in pairs(mod._damage_taken_unit_by_account) do mod._damage_taken_unit_by_account[k] = nil end
+    for k in pairs(mod._player_roster) do mod._player_roster[k] = nil end
 
     table_clear(mod._enemy_health)
     table_clear(mod._last_hitter_account_id)
@@ -569,6 +575,7 @@ local function _reset_runtime_state()
     if _Stats then
         _Stats.clear()
     end
+    mod._active_run_prefix_pending = _active_run_store.snapshot ~= nil
 
     _clear_unit_runtime_caches()
     _runtime_stat_revision = _runtime_stat_revision + 1
@@ -714,6 +721,104 @@ end
 
 local function _account_id(player)
     return player:account_id() or player:name()
+end
+
+function mod._retire_player_unit(aid, unit)
+    _state_tracker[aid] = nil
+    _disabled_tracker[aid] = nil
+    _combat_ability_charges[aid] = nil
+    mod._damage_taken_unit_by_account[aid] = nil
+
+    if unit then
+        _unit_to_player[unit] = nil
+        mod.current_ammo[unit] = nil
+        for pickup_unit, pending in pairs(mod.pending_ammo_pickups) do
+            if pending.player_unit == unit then
+                mod.pending_ammo_pickups[pickup_unit] = nil
+            end
+        end
+    end
+end
+
+function mod._baseline_player_unit(aid, player, unit, previous_unit)
+    mod._retire_player_unit(aid, previous_unit)
+    if not unit or not ScriptUnit then return end
+
+    _unit_to_player[unit] = player
+    local health = ScriptUnit.has_extension(unit, "health_system")
+    local damage = health and health._damage
+    if _Stats and type(damage) == "number" and _Stats.rebaseline_diff("damage_taken", aid, damage) then
+        mod._damage_taken_unit_by_account[aid] = unit
+    end
+
+    local unit_data = ScriptUnit.has_extension(unit, "unit_data_system")
+    if not unit_data then return end
+
+    local character_state = unit_data:read_component("character_state")
+    _state_tracker[aid] = character_state and character_state.state_name or nil
+
+    if unit_data:has_component("disabled_character_state") then
+        local disabled = unit_data:read_component("disabled_character_state")
+        local state_name = disabled and disabled.disabling_type
+        if state_name and state_name ~= "none" then
+            _disabled_tracker[aid] = {
+                state_name = state_name,
+                disabling_unit = disabled.disabling_unit,
+                player_aid = aid,
+                credited = true,
+            }
+        end
+    end
+end
+
+function mod._sync_player_roster(players)
+    local current = {}
+    local changed = false
+
+    for _, player in pairs(players or {}) do
+        local aid = _account_id(player)
+        if aid then
+            local unit = player.player_unit
+            current[aid] = { player = player, unit = unit }
+            local previous = mod._player_roster[aid]
+            if not previous or previous.player ~= player or previous.unit ~= unit then
+                changed = true
+                mod._baseline_player_unit(aid, player, unit, previous and previous.unit)
+            end
+        end
+    end
+
+    for aid, previous in pairs(mod._player_roster) do
+        if not current[aid] then
+            changed = true
+            mod._retire_player_unit(aid, previous.unit)
+        end
+    end
+
+    mod._player_roster = current
+    if changed then
+        _runtime_stat_revision = _runtime_stat_revision + 1
+        local ui = Managers.ui
+        local view = ui and ui:view_instance("another_scoreboard_view")
+        if view and view._build and not (view._context and view._context.scoreboard_history)
+                and (not ui.is_view_closing or not ui:is_view_closing("another_scoreboard_view")) then
+            view:_build()
+        end
+    end
+
+    return changed
+end
+
+function mod._record_damage_taken(unit, player, damage)
+    if not _Stats or type(damage) ~= "number" or damage <= 0 then return end
+
+    local aid = _account_id(player)
+    if mod._damage_taken_unit_by_account[aid] ~= unit then
+        _Stats.rebaseline_diff("damage_taken", aid, damage)
+        mod._damage_taken_unit_by_account[aid] = unit
+    else
+        _Stats.record("damage_taken", aid, damage)
+    end
 end
 
 function mod.order_scoreboard_players(players)
@@ -1271,6 +1376,14 @@ end
 
 function mod.get_history()
     return _History
+end
+
+function mod.open_player_social(account_id)
+    if mod._social then
+        return mod._social.request(account_id)
+    end
+
+    return false
 end
 
 local function _scoreboard_render_settings()
@@ -1952,6 +2065,7 @@ local function _history_players()
                 name = player:name(),
                 archetype_icon = archetype_name and UISettings.archetype_font_icon[archetype_name],
                 loadout_snapshot = mod._loadout and mod._loadout.capture(profile),
+                social_account_id = mod._social and mod._social.account_id_for_player(player) or nil,
             }
         end
     end
@@ -1991,6 +2105,7 @@ local function _player_snapshot(player)
         archetype_icon = archetype_name and UISettings.archetype_font_icon[archetype_name],
         slot = type(player.slot) == "function" and player:slot() or nil,
         loadout_snapshot = mod._loadout and mod._loadout.capture(profile),
+        social_account_id = mod._social and mod._social.account_id_for_player(player) or nil,
     }
 end
 
@@ -2094,13 +2209,6 @@ local function _current_session_id()
         end
     end
 
-    if connection and type(connection.session_id) == "function" then
-        local ok, session_id = pcall(connection.session_id, connection)
-        if ok and session_id and session_id ~= "" then
-            return tostring(session_id)
-        end
-    end
-
     local party_immaterium = Managers.party_immaterium
     if party_immaterium and type(party_immaterium.current_game_session_id) == "function" then
         local ok, session_id = pcall(party_immaterium.current_game_session_id, party_immaterium)
@@ -2177,11 +2285,6 @@ local function _active_run_key_matches(saved_key, current_key)
     return saved_key.session_id ~= nil
         and saved_key.session_id == current_key.session_id
         and saved_key.mission_name == current_key.mission_name
-        and saved_key.circumstance_name == current_key.circumstance_name
-        and saved_key.challenge == current_key.challenge
-        and saved_key.resistance == current_key.resistance
-        and saved_key.game_mode_name == current_key.game_mode_name
-        and saved_key.is_expedition == current_key.is_expedition
 end
 
 local function _active_run_mission_snapshot(metadata)
@@ -2235,6 +2338,7 @@ local function _clear_active_run_snapshot()
     for key in pairs(_active_run_store) do
         _active_run_store[key] = nil
     end
+    mod._active_run_prefix_pending = false
 end
 
 local function _restore_mission_elapsed(elapsed)
@@ -2277,22 +2381,51 @@ local function _capture_active_run_snapshot(reason)
         return false
     end
 
+    local stats = _Stats.export_active_run()
+    local coherency_time = _copy_number_map(_coherency_time)
+    local coherency_eligible_time = _copy_number_map(_coherency_eligible_time)
+    local mission_elapsed = _history_duration()
+    local previous = mod._active_run_prefix_pending and _active_run_store.snapshot or nil
+
+    if type(previous) == "table" and previous.version == 1
+            and _active_run_key_matches(previous.run_key, run_key) == true then
+        if not _Stats.merge_active_run(previous.stats) then return false end
+        for aid, seconds in pairs(_copy_number_map(previous.coherency_time)) do
+            _coherency_time[aid] = (_coherency_time[aid] or 0) + seconds
+        end
+        for aid, seconds in pairs(_copy_number_map(previous.coherency_eligible_time)) do
+            _coherency_eligible_time[aid] = (_coherency_eligible_time[aid] or 0) + seconds
+        end
+        local previous_elapsed = previous.mission_elapsed
+        if type(previous_elapsed) ~= "number" or previous_elapsed ~= previous_elapsed
+                or previous_elapsed == math_huge or previous_elapsed == -math_huge or previous_elapsed < 0 then
+            previous_elapsed = 0
+        end
+        _restore_mission_elapsed(mission_elapsed + previous_elapsed)
+        stats = _Stats.export_active_run()
+        coherency_time = _copy_number_map(_coherency_time)
+        coherency_eligible_time = _copy_number_map(_coherency_eligible_time)
+        mission_elapsed = _history_duration()
+        _runtime_stat_revision = _runtime_stat_revision + 1
+    end
+
     _active_run_store.snapshot = {
         version = 1,
         reason = reason,
         run_key = run_key,
         mission = _active_run_mission_snapshot(metadata),
-        mission_elapsed = _history_duration(),
-        coherency_time = _copy_number_map(_coherency_time),
-        coherency_eligible_time = _copy_number_map(_coherency_eligible_time),
-        stats = _Stats.export_active_run(),
+        mission_elapsed = mission_elapsed,
+        coherency_time = coherency_time,
+        coherency_eligible_time = coherency_eligible_time,
+        stats = stats,
     }
+    mod._active_run_prefix_pending = false
 
     return true
 end
 
 local function _try_restore_active_run(metadata)
-    if not _Stats or not _Stats.import_active_run then
+    if not mod._active_run_prefix_pending or not _Stats or not _Stats.merge_active_run then
         return false
     end
 
@@ -2321,7 +2454,8 @@ local function _try_restore_active_run(metadata)
         return false
     end
 
-    local ok = _Stats.import_active_run(snapshot.stats)
+    local live_elapsed = _history_duration()
+    local ok = _Stats.merge_active_run(snapshot.stats)
     if not ok then
         _clear_active_run_snapshot()
         return false
@@ -2329,12 +2463,10 @@ local function _try_restore_active_run(metadata)
 
     _aggro_baseline_pending = true
 
-    table_clear(_coherency_time)
     for aid, seconds in pairs(_copy_number_map(snapshot.coherency_time)) do
-        _coherency_time[aid] = seconds
+        _coherency_time[aid] = (_coherency_time[aid] or 0) + seconds
     end
 
-    table_clear(_coherency_eligible_time)
     local eligible_time = _copy_number_map(snapshot.coherency_eligible_time)
     local previous_elapsed = snapshot.mission_elapsed
     if next(eligible_time) == nil and type(previous_elapsed) == "number" and previous_elapsed >= 0 and previous_elapsed < math_huge then
@@ -2343,7 +2475,7 @@ local function _try_restore_active_run(metadata)
         end
     end
     for aid, seconds in pairs(eligible_time) do
-        _coherency_eligible_time[aid] = seconds
+        _coherency_eligible_time[aid] = (_coherency_eligible_time[aid] or 0) + seconds
     end
 
     if type(snapshot.mission) == "table" then
@@ -2351,7 +2483,13 @@ local function _try_restore_active_run(metadata)
         _mission_metadata.is_expedition = snapshot.mission.is_expedition or _mission_metadata.is_expedition
     end
 
-    _restore_mission_elapsed(snapshot.mission_elapsed)
+    local saved_elapsed = snapshot.mission_elapsed
+    if type(saved_elapsed) ~= "number" or saved_elapsed ~= saved_elapsed
+            or saved_elapsed == math_huge or saved_elapsed == -math_huge or saved_elapsed < 0 then
+        saved_elapsed = 0
+    end
+    _restore_mission_elapsed(saved_elapsed + live_elapsed)
+    _clear_active_run_snapshot()
 
     return true
 end
@@ -2695,10 +2833,7 @@ function(func, self, unit, dt, t, ...)
     if unit then
         local p = _player_from_unit(unit)
         if p and _Stats then
-            local dmg = self._damage
-            if dmg and dmg > 0 then
-                _Stats.record("damage_taken", _account_id(p), dmg)
-            end
+            mod._record_damage_taken(unit, p, self._damage)
         end
         local comp = self._character_state_read_component
         if comp then _track_player_state(unit, comp.state_name) end
@@ -2722,10 +2857,7 @@ function(func, self, unit, dt, t, ...)
     if unit then
         local p = _player_from_unit(unit)
         if p and _Stats then
-            local dmg = self._damage
-            if dmg and dmg > 0 then
-                _Stats.record("damage_taken", _account_id(p), dmg)
-            end
+            mod._record_damage_taken(unit, p, self._damage)
         end
         local comp = self._character_state_component
         if comp then _track_player_state(unit, comp.state_name) end
@@ -3038,6 +3170,7 @@ mod.update = function(dt)
     if mod.stagger_update_frame then mod.stagger_update_frame() end
     _update_history_preload(dt)
     _update_history(dt)
+    if mod._social then mod._social.update(dt) end
 
     local tm = Managers.time
     if not tm or not tm:has_timer("gameplay") then return end
@@ -3046,7 +3179,7 @@ mod.update = function(dt)
         _mission_start_time = tm:time("gameplay")
     end
 
-    if _active_run_store.snapshot and _Stats and _Stats.has_active_run_data and not _Stats.has_active_run_data() then
+    if mod._active_run_prefix_pending and _active_run_store.snapshot and _Stats then
         _try_restore_current_active_run()
     end
 
@@ -3054,6 +3187,7 @@ mod.update = function(dt)
     if not player_mgr then return end
 
     local players = player_mgr:human_players() or {}
+    mod._sync_player_roster(players)
     _sample_combat_ability_uses(players)
 
     _aggro_sample_timer = _aggro_sample_timer + dt
@@ -3138,6 +3272,7 @@ function mod.on_all_mods_loaded()
     _Render = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_render")
     _History = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_history")
     mod._loadout = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_loadout")
+    mod._social = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_social")
     mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_stagger")
     _request_history_preload()
 
@@ -3336,9 +3471,10 @@ function mod.on_enabled(initial_call)
 end
 
 function mod.on_disabled(initial_call)
+    _capture_active_run_snapshot("disabled")
     _close_view()
+    if mod._social then mod._social.reset() end
     _hide_boss_popup()
-    _clear_active_run_snapshot()
     _cleanup_tactical_overlay_widgets()
     _reset_runtime_state()
 end
@@ -3346,6 +3482,7 @@ end
 function mod.on_unload(exit_game)
     _capture_active_run_snapshot("unload")
     _close_view()
+    if mod._social then mod._social.reset() end
     _hide_boss_popup()
     _cleanup_tactical_overlay_widgets()
     if mod.stagger_shutdown then mod:stagger_shutdown() end
@@ -3373,6 +3510,7 @@ function mod.on_game_state_changed(status, state_name)
             end
             _capture_active_run_snapshot("gameplay_exit")
             _close_view()
+            if mod._social then mod._social.reset() end
             _cleanup_tactical_overlay_widgets()
             _clear_unit_runtime_caches()
             if mod.stagger_clear_cache then mod:stagger_clear_cache() end

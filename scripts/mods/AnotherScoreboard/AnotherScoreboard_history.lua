@@ -1360,11 +1360,17 @@ function History.player_adapters(players)
 
     for i = 1, math.min(#(players or {}), 4) do
         local player = players[i]
+        local social_account_id = player.social_account_id
+        if not social_account_id and math.is_uuid(player.account_id) then
+            social_account_id = player.account_id
+        end
+
         adapters[#adapters + 1] = {
             _account_id = player.account_id,
             _name = player.name,
             string_symbol = player.archetype_icon or player.string_symbol,
             loadout_snapshot = player.loadout_snapshot,
+            social_account_id = social_account_id,
             account_id = function(self)
                 return self._account_id
             end,

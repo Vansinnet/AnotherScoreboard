@@ -91,20 +91,24 @@ local localization = {
         ["zh-cn"] = "专精方向",
     },
     loadout_hint_open = {
-        en = "[U] Loadouts  |  [Click player] Social",
-        ["zh-cn"] = "[U] 配装  |  [点击玩家] 社交",
+        en = "[U] Loadouts",
+        ["zh-cn"] = "[U] 配装",
+    },
+    loadout_hint_open_history = {
+        en = "[U] Loadouts  |  [Click social icon] Social",
+        ["zh-cn"] = "[U] 配装  |  [点击社交图标] 社交",
     },
     loadout_hover_scroll = {
         en = "Mouse wheel: previous / next description page",
         ["zh-cn"] = "鼠标滚轮：上一页 / 下一页描述",
     },
     loadout_hint_equipment = {
-        en = "[U / Esc] Back  |  [1-4 / Wheel] Player  |  [T] Tree  |  [Hover talent] Description  |  [Click player] Social",
-        ["zh-cn"] = "[U / Esc] 返回  |  [1-4 / 滚轮] 玩家  |  [T] 天赋树  |  [悬停天赋] 描述  |  [点击玩家] 社交",
+        en = "[U / Esc] Back  |  [1-4 / Wheel / Click player] Player  |  [T] Tree  |  [Hover talent] Description",
+        ["zh-cn"] = "[U / Esc] 返回  |  [1-4 / 滚轮 / 点击玩家] 玩家  |  [T] 天赋树  |  [悬停天赋] 描述",
     },
     loadout_hint_tree = {
-        en = "[U / Esc] Back  |  [1-4] Player  |  [T] Weapons  |  [Wheel] Zoom  |  [Left drag] Pan  |  [Hover] Details",
-        ["zh-cn"] = "[U / Esc] 返回  |  [1-4] 玩家  |  [T] 武器  |  [滚轮] 缩放  |  [左键拖动] 平移  |  [悬停] 详情",
+        en = "[U / Esc] Back  |  [1-4 / Click player] Player  |  [T] Weapons  |  [Wheel] Zoom  |  [Left drag] Pan  |  [Hover talent] Details",
+        ["zh-cn"] = "[U / Esc] 返回  |  [1-4 / 点击玩家] 玩家  |  [T] 武器  |  [滚轮] 缩放  |  [左键拖动] 平移  |  [悬停天赋] 详情",
     },
 	mod_name = {
 	    en = "Another Scoreboard",

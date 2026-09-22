@@ -391,22 +391,15 @@ local function _add_row_passes(passes, row, row_key, row_y, layout, label_x, lab
     return row_y + rh
 end
 
-local function _add_player_header_passes(passes, players, ids, layout, ox, header_y, label_w, col_w, gap, header_h, host, ui_renderer)
+local function _add_player_header_passes(passes, players, ids, layout, ox, header_y, label_w, col_w, gap, header_h, host, ui_renderer, social_icons)
     local num_players = #players
 
     for pi = 1, num_players do
         local aid = ids[pi]
         local col_x = ox + gap + label_w + gap + (pi - 1) * (col_w + gap)
-        if not ui_renderer and host and host._open_player_social then
-            local player = players[pi]
-            passes[#passes + 1] = {
-                pass_type = "hotspot", content_id = "player_hotspot_" .. pi,
-                content = { pressed_callback = function() host:_open_player_social(player) end },
-                style = { offset = { col_x, header_y, BASE_Z + 9 }, size = { col_w, header_h } },
-            }
-        end
         local name_color = PLAYER_COLORS[pi] or PLAYER_COLORS[1]
         local icon = _player_archetype_icon(players[pi])
+        local social_account_id = social_icons and players[pi].social_account_id or nil
         local icon_h = icon and math_floor(header_h * 0.42) or 0
         local name_y = header_y + icon_h
         local name_h = header_h - icon_h
@@ -422,14 +415,57 @@ local function _add_player_header_passes(passes, players, ids, layout, ox, heade
             math_max(_dim.name_font, 9), col_w - _scaled(2), name_h)
         passes[#passes + 1] = _txt("player_" .. pi, player_name, col_x, name_y, BASE_Z + 8,
             col_w, name_h, "proxima_nova_bold", name_font_size, "center", "center", name_color)
+
+        if social_account_id and host then
+            local hotspot_id = "social_hotspot_" .. pi
+            local hotspot_size = math_min(math_floor(24 * _dim.scale), header_h)
+            local icon_size = math_min(math_max(math_floor(16 * _dim.scale), 10), 18)
+            icon_size = math_min(icon_size, hotspot_size)
+            local hotspot_x = col_x + col_w - hotspot_size - 1
+            local hotspot_y = header_y + math_floor((header_h - hotspot_size) / 2)
+            local icon_x = hotspot_x + math_floor((hotspot_size - icon_size) / 2)
+            local icon_y = hotspot_y + math_floor((hotspot_size - icon_size) / 2)
+            passes[#passes + 1] = {
+                pass_type = "hotspot", content_id = hotspot_id,
+                content = { pressed_callback = function() host:_open_player_social(social_account_id) end },
+                style = { offset = { hotspot_x, hotspot_y, BASE_Z + 9 }, size = { hotspot_size, hotspot_size } },
+            }
+            passes[#passes + 1] = {
+                pass_type = "rect",
+                style_id = "social_bg_" .. pi,
+                style = {
+                    offset = { hotspot_x, hotspot_y, BASE_Z + 7 },
+                    size = { hotspot_size, hotspot_size },
+                    color = { 0, name_color[2], name_color[3], name_color[4] },
+                },
+                change_function = function(content, style)
+                    style.color[1] = content[hotspot_id].is_hover and 110 or 0
+                end,
+            }
+            passes[#passes + 1] = {
+                pass_type = "texture",
+                style_id = "social_icon_" .. pi,
+                value = "content/ui/materials/icons/system/escape/social",
+                style = {
+                    offset = { icon_x, icon_y, BASE_Z + 8 },
+                    size = { icon_size, icon_size },
+                    color = { 190, name_color[2], name_color[3], name_color[4] },
+                },
+                change_function = function(content, style)
+                    style.color[1] = content[hotspot_id].is_hover and 255 or 190
+                end,
+            }
+        end
     end
 end
 
-local function _combined_panel_passes(players, ids, sections, layout, ox, oy, alternating_row_shading,
+local function _combined_panel_passes(players, ids, sections, layout, ox, oy, settings,
         host, ui_renderer)
     local num_players = #players
     local label_w, col_w, gap = _panel_metrics(layout.w, num_players)
     local header_h = _panel_header_h()
+    local alternating_row_shading = settings and settings.alternating_row_shading
+    local social_icons = settings and settings.social_icons
     local passes = {
         _rect(ox - 3, oy - 3, BASE_Z - 1, layout.w + 6, layout.h + 6, C.shadow),
         _rect(ox, oy, BASE_Z, layout.w, layout.h, C.panel),
@@ -438,7 +474,7 @@ local function _combined_panel_passes(players, ids, sections, layout, ox, oy, al
     local label_x = ox + gap
     local row_y = oy + _panel_pad()
 
-    _add_player_header_passes(passes, players, ids, layout, ox, row_y, label_w, col_w, gap, header_h, host, ui_renderer)
+    _add_player_header_passes(passes, players, ids, layout, ox, row_y, label_w, col_w, gap, header_h, host, ui_renderer, social_icons)
     row_y = row_y + header_h + _panel_pad()
 
     for si = 1, #sections do
@@ -675,7 +711,7 @@ function Render.build_widgets(host, scenegraph_id, players, sections, settings)
 
     local layout = _combined_panel_layout(sections, settings)
     local def = UIWidget.create_definition(_combined_panel_passes(players, ids, sections, layout, 0, 0,
-        settings and settings.alternating_row_shading, host),
+        settings, host),
         scenegraph_id, nil, { layout.w, layout.h })
     result.sections[#result.sections + 1] = {
         widget = def,
@@ -741,7 +777,7 @@ function Render.build_hud_widgets(hud, ui_renderer, players, sections, settings)
 
     result[#result + 1] = hud:_create_widget("as_hud_panel_1", UIWidget.create_definition(
         _combined_panel_passes(players, ids, sections, layout, abs_x, abs_y,
-            settings and settings.alternating_row_shading, hud, ui_renderer),
+            settings, hud, ui_renderer),
         "canvas", nil, { layout.w, layout.h }))
 
     local hint_text = mod:localize("scoreboard_hint_temporarily_hide")

@@ -555,6 +555,21 @@ function Stats.record(stat_id, aid, raw)
     d[aid] = entry
 end
 
+function Stats.rebaseline_diff(stat_id, aid, raw)
+    local def = _def_by_id[stat_id]
+    local data = _data[stat_id]
+    raw = _safe_number(raw)
+    if not def or def.accum ~= "diff" or not data or type(aid) ~= "string" or not raw then
+        return false
+    end
+
+    local entry = data[aid] or { value = 0, score = 0 }
+    entry.value = raw
+    data[aid] = entry
+
+    return true
+end
+
 function Stats.ensure_entries(account_ids)
     for _, def in ipairs(STAT_DEFS) do
         local d = _data[def.id]
@@ -694,6 +709,107 @@ function Stats.import_active_run(snapshot)
     External.restore(snapshot.external)
 
     return true
+end
+
+local function _safe_sum(a, b)
+    return _safe_number((a or 0) + (b or 0))
+end
+
+function Stats.merged_active_run(snapshot)
+    if type(snapshot) ~= "table" or snapshot.version ~= 1 or type(snapshot.stats) ~= "table" then
+        return false
+    end
+
+    local merged_external = External.merge_snapshot(snapshot.external)
+    if not merged_external then return false end
+
+    local saved_stats = {}
+    for _, def in ipairs(STAT_DEFS) do
+        local source = snapshot.stats[def.id]
+        if source ~= nil then
+            source = _copy_stat_table(source)
+            if not source then return false end
+        else
+            source = {}
+        end
+        saved_stats[def.id] = source
+    end
+
+    if snapshot.stats.other_damage == nil then
+        for aid, damage_entry in pairs(saved_stats.damage_dealt) do
+            local melee_entry = saved_stats.melee_damage[aid]
+            local ranged_entry = saved_stats.ranged_damage[aid]
+            local other = math_max(damage_entry.score
+                - (melee_entry and melee_entry.score or 0)
+                - (ranged_entry and ranged_entry.score or 0), 0)
+            saved_stats.other_damage[aid] = { value = other, score = other }
+        end
+    end
+
+    local merged = Stats.export_active_run()
+    merged.external = merged_external
+
+    for _, def in ipairs(STAT_DEFS) do
+        local target = merged.stats[def.id]
+        for aid, saved in pairs(saved_stats[def.id]) do
+            local current = target[aid]
+            if not current then
+                target[aid] = saved
+            elseif def.accum == "add" then
+                local value = _safe_sum(saved.value, current.value)
+                local score = _safe_sum(saved.score, current.score)
+                if not value or not score then return false end
+                target[aid] = { value = value, score = score }
+            elseif def.accum == "diff" then
+                local score = _safe_sum(saved.score, current.score)
+                if not score then return false end
+                target[aid] = { value = current.value, score = score }
+            end
+        end
+    end
+
+    local saved_total = snapshot.stats._total_damage
+    if saved_total ~= nil then
+        saved_total = _copy_stat_table(saved_total)
+        if not saved_total then return false end
+        for aid, saved in pairs(saved_total) do
+            local current = merged.stats._total_damage[aid]
+            if not current then
+                merged.stats._total_damage[aid] = saved
+            else
+                local value = _safe_sum(saved.value, current.value)
+                local score = _safe_sum(saved.score, current.score)
+                if not value or not score then return false end
+                merged.stats._total_damage[aid] = { value = value, score = score }
+            end
+        end
+    end
+
+    local saved_bosses = _copy_boss_damage_by_type(snapshot.boss_damage_by_type)
+    if not saved_bosses then return false end
+    for boss_type, saved in pairs(saved_bosses) do
+        local current = merged.boss_damage_by_type[boss_type]
+        if not current then
+            merged.boss_damage_by_type[boss_type] = saved
+        else
+            current.localization_key = current.localization_key or saved.localization_key
+            current.breed_localization_key = current.breed_localization_key or saved.breed_localization_key
+            current.count = math_max(current.count, saved.count)
+            for aid, damage in pairs(saved.values) do
+                local total = _safe_sum(damage, current.values[aid])
+                if not total then return false end
+                current.values[aid] = total
+            end
+        end
+    end
+
+    return merged
+end
+
+function Stats.merge_active_run(snapshot)
+    local merged = Stats.merged_active_run(snapshot)
+
+    return type(merged) == "table" and Stats.import_active_run(merged) or false
 end
 
 

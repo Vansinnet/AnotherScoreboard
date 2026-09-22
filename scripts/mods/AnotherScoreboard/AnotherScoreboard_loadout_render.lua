@@ -120,14 +120,9 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
         text(players[i].string_symbol or "", x + 41, 75, 28, 28, 21, color, true, "center")
         text(name or "-", x + 75, 77, 170, 24, 17, color)
         passes[#passes + 1] = {
-            pass_type = "hotspot", content_id = "player_hotspot_" .. i,
-            content = { pressed_callback = function() host:_open_player_social(players[i]) end },
-            style = { offset = { x + 35, 66, 115 }, size = { 221, 44 } },
-        }
-        passes[#passes + 1] = {
             pass_type = "hotspot", content_id = "player_select_" .. i,
             content = { pressed_callback = function() host:_select_loadout_player(i) end },
-            style = { offset = { x, 66, 115 }, size = { 35, 44 } },
+            style = { offset = { x, 66, 115 }, size = { 256, 44 } },
         }
         if chosen then rect(x + 35, 108, 220, 2, color, 105) end
     end

@@ -154,7 +154,6 @@ ASView.on_enter = function(self)
 end
 
 ASView.on_exit = function(self)
-    self._pending_social_account = nil
     self:_cleanup()
     ASView.super.on_exit(self)
 end
@@ -163,35 +162,9 @@ ASView._select_loadout_player = function(self, index)
     if index ~= self._loadout_player then self._pending_loadout_player = index end
 end
 
-ASView._open_player_social = function(self, player)
-    if not (self._context.end_view or self._context.scoreboard_history) then return end
-    local account_id = player and player:account_id()
-    if type(account_id) ~= "string" or not math.is_uuid(account_id) then return end
-    local ui = Managers.ui
-    if not ui or not Managers.data_service or not Managers.data_service.social then return end
-    self._pending_social_account = account_id
-    self._social_open_timeout = 10
-    if not ui:open_view("social_menu_view", nil, false, false) then
-        self._pending_social_account = nil
-    end
-end
-
-ASView._update_social_request = function(self, dt)
-    local account_id = self._pending_social_account
-    if not account_id then return end
-    self._social_open_timeout = self._social_open_timeout - dt
-    local ui = Managers.ui
-    if self._social_open_timeout <= 0 or not ui or ui:is_view_closing("social_menu_view") then
-        self._pending_social_account = nil
-        return
-    end
-    local roster = ui:view_instance("social_menu_roster_view")
-    if roster and roster._party_widgets and #roster._party_widgets > 0 and not roster._popup_menu then
-        self._pending_social_account = nil
-        local social = Managers.data_service and Managers.data_service.social
-        if social then
-            roster:cb_show_popup_menu_for_player(social:get_player_info_by_account_id(account_id))
-        end
+ASView._open_player_social = function(self, account_id)
+    if mod.open_player_social then
+        mod.open_player_social(account_id)
     end
 end
 
@@ -211,7 +184,8 @@ end
 
 ASView._build_hint = function(self, built, hint_text)
     if not self._show_loadout and self._context and (self._context.end_view or self._context.scoreboard_history) then
-        hint_text = (hint_text and hint_text .. "  |  " or "") .. mod:localize("loadout_hint_open")
+        local hint_id = self._context.scoreboard_history and "loadout_hint_open_history" or "loadout_hint_open"
+        hint_text = (hint_text and hint_text .. "  |  " or "") .. mod:localize(hint_id)
     end
     if not hint_text or hint_text == "" then
         return
@@ -286,8 +260,9 @@ ASView._build = function(self)
         end
         sections = mod.external_stats.filter(sections, self._external_collapsed)
 
-        local built = Render.build_widgets(self, "content_area", players, sections,
-            render_settings_with_title(settings, title_text, false))
+        local history_settings = render_settings_with_title(settings, title_text, false)
+        history_settings.social_icons = true
+        local built = Render.build_widgets(self, "content_area", players, sections, history_settings)
 
         if not built then return end
 
@@ -456,7 +431,6 @@ ASView._toggle_external_group = function(self, key, closed)
 end
 
 ASView.update = function(self, dt, t, input_service)
-    self:_update_social_request(dt)
     local scoreboard_history = self._context and self._context.scoreboard_history
     local end_view = self._context and self._context.end_view
 

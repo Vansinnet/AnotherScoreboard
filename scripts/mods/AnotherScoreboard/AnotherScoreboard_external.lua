@@ -282,6 +282,34 @@ function External.restore(snapshot)
     return true
 end
 
+function External.merge_snapshot(snapshot)
+    if not External.validate_snapshot(snapshot) then return nil end
+
+    local merged = External.export()
+    for key, saved in pairs(snapshot and snapshot.stats or {}) do
+        local current = merged.stats[key]
+        local registered = stats[key]
+
+        if not current then
+            merged.stats[key] = copy(saved)
+        elseif current.value_type == saved.value_type then
+            local values = copy(saved.values)
+            for aid, value in pairs(current.values) do
+                if registered and registered.definition.value_type == "number"
+                        and registered.definition.accumulation == "add"
+                        and values[aid] ~= nil then
+                    value = values[aid] + value
+                    if not finite(value) then return nil end
+                end
+                values[aid] = value
+            end
+            current.values = values
+        end
+    end
+
+    return merged
+end
+
 function External.validate(accounts)
     ranked_accounts = accounts
 end

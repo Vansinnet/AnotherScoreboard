@@ -23,6 +23,8 @@ The scoreboard tracks:
 - HP Lost, Downs & Deaths, Revives & Rescues, Disabled, and Disabled helped
 - Medicae uses, ammo pickups, ammo gained, ability uses, aggro, and coherency
 
+Accumulated statistics remain associated with a player's account when that player disconnects and rejoins during the same mission. Same-session recovery also preserves eligible in-process active-run checkpoints across a local reconnect, hot reload, or mid-mission disable.
+
 ### Expandable Detail Rows
 
 Use the full scoreboard without permanently filling it with every breakdown:
@@ -73,6 +75,8 @@ Open Scoreboard History with **F5** by default while in the Mourningstar or Psyk
 
 History entries include mission, game type, difficulty, completion time and date, players, outcome, mission conditions, Havoc rank and modifiers, and the complete recorded scoreboard. History recognizes standard missions, Auric and Maelstrom missions, Havoc, Expeditions, and Mortis Trials.
 
+Click the Social icon beside a player in Scoreboard History to open Darktide's native Social menu and player popup. Bots and history entries without a valid account ID have no Social action.
+
 Copy a Recent mission to the separate, unlimited **Saved** collection to keep it permanently. Saved missions can have custom names, can be renamed later, and can be removed individually. Clearing Recent history or reducing its capacity does not remove Saved missions.
 
 History files are stored locally under:
@@ -85,11 +89,9 @@ History files are stored locally under:
 
 On an end-of-mission or history scoreboard, press **U** to open Squad Loadouts. Player cards show class icons, weapons, and recorded signature talents. Hover a signature talent for its description; long descriptions can be paged with the mouse wheel.
 
-Press **T** inside Squad Loadouts to show that player's full talent tree using the game's native node, connection, icon, and tooltip styling. Use the mouse wheel to zoom, left-drag to pan, and hover a node for details. Press **1-4**, click a player number, or use the wheel in the loadout view to change player. This view is read-only: it cannot spend or remove talent points.
+Press **T** inside Squad Loadouts to show that player's full talent tree using the game's native node, connection, icon, and tooltip styling. Use the mouse wheel to zoom, left-drag to pan, and hover a node for details. Press **1-4**, click anywhere on a player card, or use the wheel in the loadout view to change player. This view is read-only: it cannot spend or remove talent points.
 
 Talent trees come from the saved mission build. If the current game tree no longer matches the saved layout or selections, AnotherScoreboard displays a notice instead of an inaccurate tree.
-
-Click a player heading or loadout card to open the native Social menu with that player's popup selected. Bots have no Social action. If InspectFromSocial is installed, its Inspect action is available from that popup.
 
 ### External Provider Stats
 
