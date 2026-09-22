@@ -42,6 +42,8 @@ Boss details cover Beast of Nurgle, Daemonhost, Chaos Spawn, Plague Ogryn, Capta
 
 AnotherScoreboard can automatically open when the mission ends. It has independent scale, opacity, and position settings, so a large end-screen result does not change the in-mission Tab layout. The same detail controls are available on the end screen.
 
+Players who leave within 30 seconds of the confirmed mission outcome remain in the final scoreboard and history with a **Left near match end** label. If someone left earlier and the squad completed the mission with a bot, the bot remains in that slot and is labeled **Bot**. A current human replacement or reconnected player always takes priority.
+
 ### Configurable Live Stats HUD
 
 The Live Stats HUD shows all human players and one to three selected statistics while you play. It is designed for quick comparisons without opening the full scoreboard.

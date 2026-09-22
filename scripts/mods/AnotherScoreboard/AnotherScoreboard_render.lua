@@ -401,8 +401,10 @@ local function _add_player_header_passes(passes, players, ids, layout, ox, heade
         local icon = _player_archetype_icon(players[pi])
         local social_account_id = social_icons and players[pi].social_account_id or nil
         local icon_h = icon and math_floor(header_h * 0.42) or 0
+        local status_key = players[pi].left_near_end and "player_left_near_end" or players[pi].is_bot and "player_bot"
+        local status_h = status_key and math_floor(header_h * 0.28) or 0
         local name_y = header_y + icon_h
-        local name_h = header_h - icon_h
+        local name_h = header_h - icon_h - status_h
 
         local name_len = layout.w < VIEW_W and 14 or 18
         if icon then
@@ -415,6 +417,14 @@ local function _add_player_header_passes(passes, players, ids, layout, ox, heade
             math_max(_dim.name_font, 9), col_w - _scaled(2), name_h)
         passes[#passes + 1] = _txt("player_" .. pi, player_name, col_x, name_y, BASE_Z + 8,
             col_w, name_h, "proxima_nova_bold", name_font_size, "center", "center", name_color)
+
+        if status_h > 0 then
+            local text = mod:localize(status_key)
+            local font_size = _fit_label_font_size(host, ui_renderer, text, "proxima_nova_bold",
+                math_max(_dim.name_font - 3, 9), col_w - _scaled(2), status_h)
+            passes[#passes + 1] = _txt("player_status_" .. pi, text, col_x, name_y + name_h, BASE_Z + 8,
+                col_w, status_h, "proxima_nova_bold", font_size, "center", "center", name_color)
+        end
 
         if social_account_id and host then
             local hotspot_id = "social_hotspot_" .. pi

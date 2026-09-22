@@ -2,6 +2,14 @@ local mod = get_mod("AnotherScoreboard")
 local enemies = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_enemies")
 
 local localization = {
+    player_bot = {
+        en = "Bot",
+        ["zh-cn"] = "机器人",
+    },
+    player_left_near_end = {
+        en = "Left near match end",
+        ["zh-cn"] = "临近结束时离开",
+    },
     external_details_key = {
 		en = "External stat details (Tab scoreboard)",
 		["zh-cn"] = "外部统计详情（Tab 记分板）",
