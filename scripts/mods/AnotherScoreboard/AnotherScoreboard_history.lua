@@ -625,6 +625,8 @@ local function entry_summary(entry, file_name, file_path)
             name = player.name,
             archetype_icon = player.archetype_icon,
             slot = player.slot,
+            left_near_end = player.left_near_end,
+            is_human = player.is_human,
         }
     end
 
@@ -1368,6 +1370,8 @@ function History.player_adapters(players)
         adapters[#adapters + 1] = {
             _account_id = player.account_id,
             _name = player.name,
+            left_near_end = player.left_near_end,
+            is_bot = player.is_human == false,
             string_symbol = player.archetype_icon or player.string_symbol,
             loadout_snapshot = player.loadout_snapshot,
             social_account_id = social_account_id,

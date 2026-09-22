@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.5
+
+- Kept players who leave within 30 seconds of the confirmed mission outcome on the end-of-mission scoreboard and in Scoreboard History.
+- Marked retained late departures as **Left near match end** so the result does not imply that they remained connected.
+- Kept bots on the final scoreboard when a player left earlier in the mission, preserving runs completed with a bot.
+- Marked bot columns as **Bot** and prioritized current human replacements and reconnected players over departed players.
+
 ## 1.2.4
 
 - Preserved accumulated native and external statistics when a teammate disconnects and rejoins with the same account.

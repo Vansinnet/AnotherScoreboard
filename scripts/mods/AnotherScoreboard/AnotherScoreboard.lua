@@ -92,6 +92,7 @@ local LIVE_STAT_CATALOG = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherS
 local ARCHETYPE_CATALOG = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_archetypes")
 local SCOREBOARD_STAT_CATALOG = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_scoreboard_stats")
 local THEME_CATALOG = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_themes")
+mod._late_players = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_late_players")
 
 local math_floor = math.floor
 local math_max   = math.max
@@ -122,6 +123,7 @@ mod._active_run_prefix_pending = _active_run_store.snapshot ~= nil
 local _state_gameplay_enter_handled = false
 local _scoreboard_history_saved = false
 local _end_player_snapshot = nil
+mod._late_departures = {}
 local _coherency_last_sample = nil
 local _state_tracker = {}
 local _disabled_tracker = {}
@@ -592,6 +594,7 @@ local function _reset_runtime_state()
     _mission_elapsed_final = nil
     _scoreboard_history_saved = false
     _end_player_snapshot = nil
+    mod._late_departures = {}
 
     table_clear(_boss_popup_queue)
     _boss_popup_active = nil
@@ -2104,12 +2107,15 @@ local function _player_snapshot(player)
         name = player:name(),
         archetype_icon = archetype_name and UISettings.archetype_font_icon[archetype_name],
         slot = type(player.slot) == "function" and player:slot() or nil,
+        is_human = player:is_human_controlled(),
         loadout_snapshot = mod._loadout and mod._loadout.capture(profile),
         social_account_id = mod._social and mod._social.account_id_for_player(player) or nil,
     }
 end
 
 local function _capture_end_player_snapshot()
+    if _end_player_snapshot then return end
+
     local player_manager = Managers.player
     if not player_manager then
         return
@@ -2121,6 +2127,11 @@ local function _capture_end_player_snapshot()
         if record then
             snapshot[#snapshot + 1] = record
         end
+    end
+
+    local time_manager = Managers.time
+    if time_manager and time_manager:has_timer("main") then
+        snapshot = mod._late_players.resolve(mod._late_departures, snapshot, time_manager:time("main"))
     end
 
     if #snapshot > 0 then
@@ -2407,6 +2418,7 @@ local function _capture_active_run_snapshot(reason)
         coherency_eligible_time = _copy_number_map(_coherency_eligible_time)
         mission_elapsed = _history_duration()
         _runtime_stat_revision = _runtime_stat_revision + 1
+        mod._late_players.merge(mod._late_departures, previous.late_departures)
     end
 
     _active_run_store.snapshot = {
@@ -2418,6 +2430,7 @@ local function _capture_active_run_snapshot(reason)
         coherency_time = coherency_time,
         coherency_eligible_time = coherency_eligible_time,
         stats = stats,
+        late_departures = mod._late_players.merge({}, mod._late_departures),
     }
     mod._active_run_prefix_pending = false
 
@@ -2489,6 +2502,7 @@ local function _try_restore_active_run(metadata)
         saved_elapsed = 0
     end
     _restore_mission_elapsed(saved_elapsed + live_elapsed)
+    mod._late_players.merge(mod._late_departures, snapshot.late_departures)
     _clear_active_run_snapshot()
 
     return true
@@ -3098,6 +3112,19 @@ function(func, self, parent, params, creation_context, ...)
             ui:close_view("another_scoreboard_history_view", true)
         end
     end
+end)
+
+mod:hook("PlayerManager", "remove_player",
+function(func, self, peer_id, local_player_id)
+    local time_manager = Managers.time
+    if not _end_player_snapshot and _is_in_mission() and time_manager and time_manager:has_timer("main") then
+        local player = self:player(peer_id, local_player_id)
+        if player and player:is_human_controlled() then
+            mod._late_players.remember(mod._late_departures, _player_snapshot(player), time_manager:time("main"))
+        end
+    end
+
+    return func(self, peer_id, local_player_id)
 end)
 
 mod:hook(CLASS.GameModeManager, "_set_end_conditions_met",
