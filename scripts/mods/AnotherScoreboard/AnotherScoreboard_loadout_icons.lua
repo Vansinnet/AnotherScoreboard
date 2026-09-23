@@ -10,12 +10,16 @@ local function clear(entry)
     entry.widget.dirty = true
 end
 
+local function item_definitions()
+    local backend = Managers.backend
+    return backend and backend.interfaces and backend.interfaces.master_data and MasterItems.get_cached()
+end
+
 function Icons.load(widget, requests)
     if not requests or #requests == 0 then return nil end
 
     local ui = Managers.ui
-    local backend = Managers.backend
-    local definitions = backend and backend.interfaces and backend.interfaces.master_data and MasterItems.get_cached()
+    local definitions = item_definitions()
     if not ui or not definitions then return nil end
 
     local owner = { ui = ui, entries = {}, active = true }
@@ -48,11 +52,39 @@ function Icons.load(widget, requests)
     return owner
 end
 
+function Icons.preload(players, size)
+    if not players or #players == 0 then return nil end
+
+    local ui = Managers.ui
+    local definitions = item_definitions()
+    if not ui or not definitions then return nil end
+
+    local owner = { ui = ui, entries = {}, active = true }
+    local seen = {}
+    for _, player in ipairs(players) do
+        local snapshot = player and player.loadout_snapshot
+        for _, weapon in ipairs(snapshot and snapshot.weapons or {}) do
+            local name = weapon.master_item_name
+            local item = name and not seen[name] and definitions[name]
+            if item and (item.item_type == "WEAPON_MELEE" or item.item_type == "WEAPON_RANGED") then
+                seen[name] = true
+                owner.entries[#owner.entries + 1] = {
+                    id = ui:load_item_icon(item, nil, {
+                        camera_focus_slot_name = weapon.slot,
+                        size = size,
+                    }),
+                }
+            end
+        end
+    end
+    return owner
+end
+
 function Icons.destroy(owner)
     if not owner or not owner.active then return end
     owner.active = false
     for _, entry in ipairs(owner.entries) do
-        clear(entry)
+        if entry.widget then clear(entry) end
         if entry.id then
             owner.ui:unload_item_icon(entry.id)
             entry.id = nil

@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.5
+## 1.2.6
 
 - Kept players who leave within 30 seconds of the confirmed mission outcome on the end-of-mission scoreboard and in Scoreboard History.
 - Marked retained late departures as **Left near match end** so the result does not imply that they remained connected.
