@@ -1,4 +1,4 @@
-# AnotherScoreboard v1.2.6
+# AnotherScoreboard v1.2.7
 
 A detailed, performance-focused scoreboard for Warhammer 40,000: Darktide. Track the mission while you play, review end-of-mission results, monitor a configurable Live Stats HUD, see boss-damage summaries, and keep a persistent local history of completed missions.
 
@@ -91,7 +91,9 @@ History files are stored locally under:
 
 On an end-of-mission or history scoreboard, press **U** to open Squad Loadouts. Player cards show class icons, weapons, and recorded signature talents. Hover a signature talent for its description; long descriptions can be paged with the mouse wheel.
 
-Weapon cards use Darktide's native item renderer to show the weapon's standard model instead of its Rank. Thumbnails are available for mission snapshots recorded by this version or later; older history entries continue to show their saved weapon details without an image.
+Weapon cards use Darktide's native item renderer to show the weapon's standard model instead of its Rank. Thumbnails are available for mission snapshots recorded by v1.2.5 or later; older history entries continue to show their saved weapon details without an image. Saved mission scoreboards preload weapon thumbnails before you open Squad Loadouts.
+
+Three curio cards show each equipped curio's main Health, Toughness, Stamina, or Wounds bonus. Hover a curio to see its additional perks. Curios are recorded in new mission snapshots starting with v1.2.7; older entries show that curio data was not recorded.
 
 Press **T** inside Squad Loadouts to show that player's full talent tree using the game's native node, connection, icon, and tooltip styling. Use the mouse wheel to zoom, left-drag to pan, and hover a node for details. Press **1-4**, click anywhere on a player card, or use the wheel in the loadout view to change player. This view is read-only: it cannot spend or remove talent points.
 

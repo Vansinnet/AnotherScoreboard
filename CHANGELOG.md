@@ -1,6 +1,17 @@
 # Changelog
 
+## 1.2.7
+
+- Enlarged weapon thumbnails in Squad Loadouts and removed the Expertise and Base Rating labels to make room while keeping weapon stats, perks, and blessings.
+- Preloaded weapon thumbnails when opening a saved mission scoreboard, so they can appear immediately on switching to Squad Loadouts; released the preloaded images on leaving that mission.
+- Added three curio cards to Squad Loadouts, labeled by their main Health, Toughness, Stamina, or Wounds bonus. Hover a curio to see up to three additional perks.
+- Captured curios in new mission snapshots. Older history entries remain compatible and show when curio data was not recorded; empty slots are distinguished from missing snapshot data.
+
 ## 1.2.6
+
+- Repackaged v1.2.5 with an updated version label for installation testing; no runtime code changes.
+
+## 1.2.5
 
 - Kept players who leave within 30 seconds of the confirmed mission outcome on the end-of-mission scoreboard and in Scoreboard History.
 - Marked retained late departures as **Left near match end** so the result does not imply that they remained connected.
