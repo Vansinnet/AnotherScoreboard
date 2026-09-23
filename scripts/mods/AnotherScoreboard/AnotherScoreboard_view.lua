@@ -130,7 +130,7 @@ local function _apply_scoreboard_position(self)
     end
 
     if self._show_loadout then
-        self:_set_scenegraph_position("scoreboard_root", 0, -11)
+        self:_set_scenegraph_position("scoreboard_root", 0, -11 - ((self._loadout_panel_height or 680) - 680) / 2)
         return
     end
 
@@ -151,11 +151,17 @@ end
 
 ASView.on_enter = function(self)
     ASView.super.on_enter(self)
+    if self._context and self._context.scoreboard_history then
+        local players = mod.order_scoreboard_players(self:_get_players())
+        self._preloaded_loadout_icons = LoadoutIcons.preload(players, LoadoutRender.weapon_icon_size())
+    end
     self:_build()
 end
 
 ASView.on_exit = function(self)
     self:_cleanup()
+    LoadoutIcons.destroy(self._preloaded_loadout_icons)
+    self._preloaded_loadout_icons = nil
     ASView.super.on_exit(self)
 end
 
@@ -240,6 +246,7 @@ ASView._build = function(self)
         end
         local built = LoadoutRender.build(self, "content_area", players, self._loadout_player,
             self._loadout_tree, settings)
+        self._loadout_panel_height = built.panel.h
         self._loadout_player_count = #players
         self._column_widgets = {}
         for i, w in ipairs(built.columns) do

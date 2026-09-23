@@ -11,6 +11,10 @@ local PLAYER_COLORS = {
 local SIGNATURES = { "blitz", "aura", "ability", "keystone" }
 local W, H = 1120, 680
 
+function LoadoutRender.weapon_icon_size()
+    return { 300, 108 }
+end
+
 function LoadoutRender.build(host, scenegraph_id, players, selected_player, show_tree, settings)
     local Render = mod:get_render()
     Render.set_theme(settings and settings.scoreboard_theme)
@@ -87,6 +91,7 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
     local player_index = math.max(1, math.min(math.min(#players, 4), math.floor(selected_player or 1)))
     local player = players[player_index]
     local snapshot = player and player.loadout_snapshot
+    local panel_h = snapshot and not show_tree and 840 or H
     local player_color = PLAYER_COLORS[player_index]
     local talent_by_id = {}
     for _, layout in ipairs(snapshot and snapshot.layouts or {}) do
@@ -104,11 +109,11 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
         end
     end
 
-    rect(0, 0, W, H, opaque(C.panel), 100)
+    rect(0, 0, W, panel_h, opaque(C.panel), 100)
     rect(0, 0, W, 2, C.title, 104)
-    rect(0, 0, 1, H, C.accent, 104)
-    rect(W - 1, 0, 1, H, C.accent, 104)
-    rect(0, H - 1, W, 1, C.accent, 104)
+    rect(0, 0, 1, panel_h, C.accent, 104)
+    rect(W - 1, 0, 1, panel_h, C.accent, 104)
+    rect(0, panel_h - 1, W, 1, C.accent, 104)
     text(loc("title"), 24, 15, 630, 40, 30, C.title, true)
     text(loc("readonly"), 696, 23, 400, 24, 13, C.sub, false, "right")
     for i = 1, math.min(#players, 4) do
@@ -148,21 +153,19 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
             end
             text(weapon_name or loc("no_weapon"), x + 57, 179, 453, 48, 23, C.label, true)
             if weapon then
-                text(loc("expertise") .. "  " .. tostring(weapon.rating or "-"), x + 16, 229, 242, 24, 15, C.title)
-                text(loc("stats") .. "  " .. tostring(weapon.base_rating or "-"), x + 278, 229, 232, 24, 15, C.sub, false, "right")
-                rect(x + 16, 260, 496, 1, C.accent)
+                rect(x + 16, 229, 496, 1, C.accent)
                 local stats = weapon.base_stats or {}
                 local row_h = math.min(22, 118 / math.max(#stats, 1))
                 for j, stat in ipairs(stats) do
-                    local y = 271 + (j - 1) * row_h
+                    local y = 240 + (j - 1) * row_h
                     local value = math.max(0, math.min(1, tonumber(stat.value) or 0))
                     text(stat.name or stat.id, x + 16, y, 113, row_h, 12, C.sub)
                     rect(x + 137, y + row_h * 0.3, 66, math.max(1, row_h * 0.3), opaque(C.panel))
                     rect(x + 137, y + row_h * 0.3, 66 * value, math.max(1, row_h * 0.3), player_color, 105)
                     text(string.format("%.0f%%", value * 100), x + 209, y, 42, row_h, 12, C.label, false, "right")
                 end
-                text(loc("perks"), x + 278, 271, 234, 20, 13, C.title)
-                text(loc("blessings"), x + 278, 363, 234, 20, 13, C.title)
+                text(loc("perks"), x + 278, 240, 234, 20, 13, C.title)
+                text(loc("blessings"), x + 278, 332, 234, 20, 13, C.title)
                 for group_index, key in ipairs({ "perks", "blessings" }) do
                     local lines = {}
                     for _, trait in ipairs(weapon[key] or {}) do
@@ -176,16 +179,16 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
                         end
                     end
                     text(#lines > 0 and table.concat(lines, "\n") or loc("no_selection"),
-                        x + 278, group_index == 1 and 294 or 386, 234, 59, 14, C.label)
+                        x + 278, group_index == 1 and 263 or 355, 234, 59, 14, C.label)
                 end
                 if weapon.master_item_name then
                     local style_id = "weapon_icon_" .. i
-                    local size = { 242, 68 }
+                    local size = LoadoutRender.weapon_icon_size()
                     passes[#passes + 1] = {
                         pass_type = "texture", style_id = style_id,
                         value = "content/ui/materials/icons/items/containers/item_container_landscape_no_rarity",
                         style = {
-                            offset = { x + 16, 390, 105 }, size = size,
+                            offset = { x - 4, 354, 105 }, size = size,
                             color = { 0, 255, 255, 255 },
                             material_values = { use_placeholder_texture = 1 },
                         },
@@ -197,10 +200,61 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
                 end
             end
         end
+        text(loc("curios"), 24, 487, 350, 28, 21, C.title, true)
+        text(loc("curio_hover"), 666, 492, 430, 22, 13, C.sub, false, "right")
+        if not snapshot.curios then
+            card(24, 522, 1072, 96, C.accent)
+            text(loc("curios_unrecorded"), 44, 551, 1032, 34, 17, C.sub, false, "center")
+        else
+            for i = 1, 3 do
+                local slot = "slot_attachment_" .. i
+                local curio
+                for _, candidate in ipairs(snapshot.curios) do
+                    if candidate.slot == slot then curio = candidate break end
+                end
+                local x = 24 + (i - 1) * 364
+                card(x, 522, 344, 96, player_color)
+                text(string.format("%02d", i), x + 14, 537, 32, 27, 16, player_color)
+                if curio then
+                    text(loc("curio_" .. (curio.type or "unknown")), x + 50, 534, 278, 30, 21, C.label, true)
+                    local main = curio.main
+                    text(main and (main.description or main.name) or loc("no_description"),
+                        x + 50, 565, 278, 42, 15, C.sub)
+                    local hotspot_id = "curio_hotspot_" .. i
+                    passes[#passes + 1] = {
+                        pass_type = "hotspot", content_id = hotspot_id,
+                        style = { offset = { x, 522, 115 }, size = { 344, 96 } },
+                    }
+                    local first = #passes + 1
+                    local tooltip_x = math.min(x, W - 504)
+                    card(tooltip_x, 638, 480, 169, player_color)
+                    text(loc("curio_" .. (curio.type or "unknown")) .. "  " .. string.format("%02d", i),
+                        tooltip_x + 16, 649, 448, 29, 18, C.title, true)
+                    if #(curio.perks or {}) == 0 then
+                        text(loc("no_selection"), tooltip_x + 16, 691, 448, 40, 15, C.sub)
+                    else
+                        for j = 1, math.min(#curio.perks, 3) do
+                            local perk = curio.perks[j]
+                            text(perk.description or perk.name or loc("no_description"),
+                                tooltip_x + 16, 683 + (j - 1) * 39, 448, 39, 15, C.label)
+                        end
+                    end
+                    for index = first, #passes do
+                        passes[index].style.offset[3] = passes[index].style.offset[3] + 100
+                        passes[index].visibility_function = function(content)
+                            return content[hotspot_id].is_hover
+                        end
+                    end
+                else
+                    text(loc("curio_empty"), x + 50, 549, 278, 34, 17, C.sub)
+                end
+            end
+        end
+        local signature_y = 638
         for i, category in ipairs(SIGNATURES) do
             local x = 24 + (i - 1) * 272
-            card(x, 486, 256, 169, C.title)
-            text(loc(category), x + 14, 498, 228, 22, 15, C.title, true)
+            card(x, signature_y, 256, 169, C.title)
+            text(loc(category), x + 14, signature_y + 12, 228, 22, 15, C.title, true)
             local names, descriptions, icons = {}, {}, {}
             for _, id in ipairs(snapshot.signature and snapshot.signature[category] or {}) do
                 local talent = talent_by_id[id]
@@ -208,12 +262,12 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
                 descriptions[#descriptions + 1] = talent and talent.description or loc("no_description")
                 if talent and talent.icon then icons[#icons + 1] = talent.icon end
             end
-            text(#names > 0 and table.concat(names, " / ") or loc("no_selection"), x + 14, 529, 228, 41, 18, C.label, true)
+            text(#names > 0 and table.concat(names, " / ") or loc("no_selection"), x + 14, signature_y + 43, 228, 41, 18, C.label, true)
             for j, icon in ipairs(icons) do
                 passes[#passes + 1] = {
                     pass_type = "texture", value = "content/ui/materials/frames/talents/talent_icon_container",
                     style = {
-                        offset = { x + 128 - #icons * 34 + (j - 1) * 68, 578, 111 }, size = { 64, 64 },
+                        offset = { x + 128 - #icons * 34 + (j - 1) * 68, signature_y + 92, 111 }, size = { 64, 64 },
                         color = { 255, 255, 255, 255 },
                         material_values = { icon = icon, frame = "content/ui/textures/frames/talents/circular_frame",
                             icon_mask = "content/ui/textures/frames/talents/circular_frame_mask", intensity = 0, saturation = 1 },
@@ -223,7 +277,7 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
             local hotspot_id = "signature_hotspot_" .. i
             passes[#passes + 1] = {
                 pass_type = "hotspot", content_id = hotspot_id,
-                style = { offset = { x, 486, 115 }, size = { 256, 169 } },
+                style = { offset = { x, signature_y, 115 }, size = { 256, 169 } },
             }
             local first = #passes + 1
             card(170, 170, 780, 304, C.title)
@@ -273,9 +327,9 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
 
     return {
         weapon_icons = weapon_icons,
-        columns = { { widget = UIWidget.create_definition(passes, scenegraph_id, nil, { W, H }), offset = { (900 - W) / 2, 0, 0 } } },
-        panel = { x = (900 - W) / 2, y = 0, w = W, h = H },
-        content_height = H + 42,
+        columns = { { widget = UIWidget.create_definition(passes, scenegraph_id, nil, { W, panel_h }), offset = { (900 - W) / 2, 0, 0 } } },
+        panel = { x = (900 - W) / 2, y = 0, w = W, h = panel_h },
+        content_height = panel_h + 42,
         text_scale = text_scale,
     }
 end

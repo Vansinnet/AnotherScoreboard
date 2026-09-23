@@ -50,6 +50,42 @@ local localization = {
         en = "No description available.",
         ["zh-cn"] = "暂无描述。",
     },
+    loadout_curios = {
+        en = "Curios",
+        ["zh-cn"] = "珍品",
+    },
+    loadout_curio_hover = {
+        en = "Hover over a curio to see its bonuses",
+        ["zh-cn"] = "悬停珍品查看附加属性",
+    },
+    loadout_curios_unrecorded = {
+        en = "Curios were not recorded for this mission.",
+        ["zh-cn"] = "本次任务未记录珍品。",
+    },
+    loadout_curio_empty = {
+        en = "Empty slot",
+        ["zh-cn"] = "空栏位",
+    },
+    loadout_curio_health = {
+        en = "Health",
+        ["zh-cn"] = "生命值",
+    },
+    loadout_curio_toughness = {
+        en = "Toughness",
+        ["zh-cn"] = "韧性",
+    },
+    loadout_curio_stamina = {
+        en = "Stamina",
+        ["zh-cn"] = "体力",
+    },
+    loadout_curio_wounds = {
+        en = "Wounds",
+        ["zh-cn"] = "伤口",
+    },
+    loadout_curio_unknown = {
+        en = "Curio",
+        ["zh-cn"] = "珍品",
+    },
     loadout_perks = {
         en = "PERKS",
         ["zh-cn"] = "专长",
@@ -111,8 +147,8 @@ local localization = {
         ["zh-cn"] = "鼠标滚轮：上一页 / 下一页描述",
     },
     loadout_hint_equipment = {
-        en = "[U / Esc] Back  |  [1-4 / Wheel / Click player] Player  |  [T] Tree  |  [Hover talent] Description",
-        ["zh-cn"] = "[U / Esc] 返回  |  [1-4 / 滚轮 / 点击玩家] 玩家  |  [T] 天赋树  |  [悬停天赋] 描述",
+        en = "[U / Esc] Back  |  [1-4 / Wheel / Click player] Player  |  [T] Tree  |  [Hover curio / talent] Details",
+        ["zh-cn"] = "[U / Esc] 返回  |  [1-4 / 滚轮 / 点击玩家] 玩家  |  [T] 天赋树  |  [悬停珍品/天赋] 详情",
     },
     loadout_hint_tree = {
         en = "[U / Esc] Back  |  [1-4 / Click player] Player  |  [T] Weapons  |  [Wheel] Zoom  |  [Left drag] Pan  |  [Hover talent] Details",

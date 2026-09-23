@@ -6,6 +6,13 @@ local TalentLayoutParser = mod:original_require("scripts/ui/views/talent_builder
 
 local Loadout = {}
 local weapon_slots = { "slot_primary", "slot_secondary" }
+local curio_slots = { "slot_attachment_1", "slot_attachment_2", "slot_attachment_3" }
+local curio_types = {
+    gadget_innate_health_increase = "health",
+    gadget_innate_toughness_increase = "toughness",
+    gadget_innate_max_wounds_increase = "wounds",
+    gadget_stamina_increase = "stamina",
+}
 local signature_types = { tactical = "blitz", aura = "aura", ability = "ability", keystone = "keystone" }
 local bot_weapon_names = {
     bot_autogun_killshot = "Autogun",
@@ -70,6 +77,7 @@ local function capture_profile(profile)
         version = 1,
         archetype = archetype and archetype.name,
         weapons = {},
+        curios = {},
         talents = {},
         layouts = {},
         signature = { blitz = {}, aura = {}, ability = {}, keystone = {} },
@@ -107,6 +115,27 @@ local function capture_profile(profile)
                 perks = capture_traits(item.perks, definitions),
                 blessings = capture_traits(item.traits, definitions),
                 base_stats = stats,
+            }
+        end
+    end
+
+    for i = 1, #curio_slots do
+        local slot = curio_slots[i]
+        local item = loadout and loadout[slot]
+        if item and item.item_type == "GADGET" then
+            local traits = capture_traits(item.traits, definitions)
+            local main_trait = item.traits and item.traits[1]
+            local main_definition = main_trait and definitions and definitions[main_trait.id]
+            local curio_type = curio_types[main_definition and main_definition.trait] or "unknown"
+            if curio_type ~= "unknown" and traits[1] and not traits[1].description
+                and main_definition.description and main_trait.value ~= nil then
+                traits[1].description = Items.trait_description(main_definition, main_trait.rarity, main_trait.value)
+            end
+            snapshot.curios[#snapshot.curios + 1] = {
+                slot = slot,
+                type = curio_type,
+                main = traits[1],
+                perks = capture_traits(item.perks, definitions),
             }
         end
     end
