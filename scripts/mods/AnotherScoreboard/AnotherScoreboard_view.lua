@@ -153,7 +153,7 @@ ASView.on_enter = function(self)
     ASView.super.on_enter(self)
     if self._context and self._context.scoreboard_history then
         local players = mod.order_scoreboard_players(self:_get_players())
-        self._preloaded_loadout_icons = LoadoutIcons.preload(players, LoadoutRender.weapon_icon_size())
+        self._preloaded_loadout_icons = LoadoutIcons.preload(players, LoadoutRender.weapon_icon_render_size())
     end
     self:_build()
 end

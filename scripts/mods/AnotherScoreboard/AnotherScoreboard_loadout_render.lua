@@ -10,9 +10,10 @@ local PLAYER_COLORS = {
 }
 local SIGNATURES = { "blitz", "aura", "ability", "keystone" }
 local W, H = 1120, 680
+local WEAPON_ICON_DISPLAY_SIZE = { 300, 108 }
 
-function LoadoutRender.weapon_icon_size()
-    return { 300, 108 }
+function LoadoutRender.weapon_icon_render_size()
+    return { 600, 216 }
 end
 
 function LoadoutRender.build(host, scenegraph_id, players, selected_player, show_tree, settings)
@@ -20,6 +21,7 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
     Render.set_theme(settings and settings.scoreboard_theme)
     local C = Render.theme_colors()
     local text_scale = math.max(0.5, math.min(2, settings and settings.text_scale or 1))
+    local weapon_icon_render_size = LoadoutRender.weapon_icon_render_size()
     local passes = {}
     local weapon_icons = {}
     local function opaque(color)
@@ -183,19 +185,18 @@ function LoadoutRender.build(host, scenegraph_id, players, selected_player, show
                 end
                 if weapon.master_item_name then
                     local style_id = "weapon_icon_" .. i
-                    local size = LoadoutRender.weapon_icon_size()
                     passes[#passes + 1] = {
                         pass_type = "texture", style_id = style_id,
                         value = "content/ui/materials/icons/items/containers/item_container_landscape_no_rarity",
                         style = {
-                            offset = { x - 4, 354, 105 }, size = size,
+                            offset = { x - 4, 354, 105 }, size = WEAPON_ICON_DISPLAY_SIZE,
                             color = { 0, 255, 255, 255 },
                             material_values = { use_placeholder_texture = 1 },
                         },
                     }
                     weapon_icons[#weapon_icons + 1] = {
                         style_id = style_id, master_item_name = weapon.master_item_name,
-                        slot = slot, size = size,
+                        slot = slot, size = weapon_icon_render_size,
                     }
                 end
             end
