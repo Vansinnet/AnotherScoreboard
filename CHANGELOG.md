@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.8
+
+- Increased Squad Loadouts weapon thumbnail render resolution to 600×216 while preserving their existing display size.
+
 ## 1.2.7
 
 - Enlarged weapon thumbnails in Squad Loadouts and removed the Expertise and Base Rating labels to make room while keeping weapon stats, perks, and blessings.

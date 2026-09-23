@@ -1,4 +1,4 @@
-# AnotherScoreboard v1.2.7
+# AnotherScoreboard v1.2.8
 
 A detailed, performance-focused scoreboard for Warhammer 40,000: Darktide. Track the mission while you play, review end-of-mission results, monitor a configurable Live Stats HUD, see boss-damage summaries, and keep a persistent local history of completed missions.
 
