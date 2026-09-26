@@ -48,7 +48,7 @@ Players who leave within 30 seconds of the confirmed mission outcome remain in t
 
 The Live Stats HUD shows all human players and one to three selected statistics while you play. It is designed for quick comparisons without opening the full scoreboard.
 
-- Choose from 39 supported statistics, including damage, kills, survival, accuracy, boss damage, DoT, explosion, arc and electrocution damage, ammo, ability, aggro, and coherency values
+- Choose from 40 supported statistics, including damage, kills, survival, accuracy, boss damage, DoT, explosion, arc and electrocution damage, ammo, ability, aggro, and coherency values
 - The first Live Stat controls player sorting
 - Lower-is-better statistics sort in the correct direction
 - Duplicate selections swap columns instead of producing repeated values
@@ -175,15 +175,16 @@ This limits overkill damage when the final hit is larger than the enemy's remain
 | Melee Damage | Sum of actual damage from attacks classified as melee |
 | Ranged Damage | Sum of actual damage from attacks classified as ranged |
 | Other Damage | Total Damage minus Melee Damage minus Ranged Damage |
+| Damage per Second (R / Live Stats) | Total Damage / mission time in seconds (the same time as Mission time in the scoreboard title) |
 | Other Damage details (R) | Other Damage split by source: Damage over time (recognized DoT profiles), Explosions, Arc lightning, Companion, Electrocution (shock and stun ticks), and Unclassified (for example shouts and pushes). The rows add up to Other Damage |
 | Damage over Time | Sum of actual damage from recognized DoT profiles |
 | Bleeding / Soulblaze / Burning / Toxin | Sum of matching DoT damage |
-| Companion Damage | Sum of actual damage caused by the player's companion attacks |
+| Companion Damage (Live Stats only) | Sum of actual damage caused by the player's companion attacks, including the Skitarii servo skull |
 | Boss Damage | Sum of actual damage dealt to tracked bosses |
 | Boss Type Damage | Boss Damage grouped by individual boss type or encounter |
 | Boss Popup Percentage | Player Boss Damage / Total Tracked Player Boss Damage x 100 |
 
-DoT, companion, and boss damage are detail categories inside Total Damage. Do not add them to Total Damage a second time.
+DoT and boss damage are detail categories inside Total Damage. Do not add them to Total Damage a second time.
 
 ### Kills
 

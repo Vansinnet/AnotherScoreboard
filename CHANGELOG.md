@@ -4,6 +4,9 @@
 
 - The R hotkey is now "Damage Details". It still shows the DoT types and now also splits Other damage into Damage over time, Explosions, Arc lightning, Companion, Electrocution, and Unclassified. Scoreboards saved before this change have no Other damage breakdown.
 - Live Stats can now show Other damage, Explosion damage, Arc lightning damage, and Electrocution damage.
+- Removed the always-visible Companion damage row under Damage details; companion damage is shown under Other damage with R. Companion damage is still available in Live Stats.
+- New Damage per second: Total damage divided by the mission time, shown under Damage dealt with R (also for saved history entries) and selectable in Live Stats.
+- Squad Loadouts now shows the icon for combat abilities whose talent definition has no icon of its own, such as the Skitarii's Voltaic Expander.
 - New visual design for the full scoreboard on the Tab overlay, end screen, and Scoreboard History: a title card, player header cards with class-colored bars, subtle player columns, left-aligned section headings with an accent marker, zebra and detail-row shading, and a green marker behind the best value in each ranked row.
 - The scoreboard footer highlights hotkeys in the theme's accent color.
 - New palettes for all six themes. Theme names and saved theme choices are unchanged, so existing users see the new look automatically. Live Stats and the Boss Popup keep their previous colors.

@@ -1529,7 +1529,7 @@ local ALPHABETICAL_ROW_PARENTS = {
 }
 
 local SCOREBOARD_HEADING_CHILDREN = {
-    damage_details = { "dot_damage", "companion_damage", "damage_to_bosses" },
+    damage_details = { "dot_damage", "damage_to_bosses" },
     combat_utility = { "headshots", "critical_hits", "enemies_staggered", "debuffs_applied" },
     survivability = { "damage_taken", "downs_and_deaths", "times_disabled", "healthstation_uses" },
     survival_utility = { "combat_ability_uses", "enemies_aggroed", "coherency_uptime" },
@@ -1732,6 +1732,33 @@ local function _ability_average_time_row(row, duration)
     }
 end
 
+function mod._damage_per_second_row(row, duration)
+    local source = row.values or _Stats and _Stats.data_for("damage_dealt") or {}
+    local values = {}
+    local seconds = type(duration) == "number" and duration > 0 and duration or nil
+
+    for aid, entry in pairs(source) do
+        local score = type(entry) == "table" and (entry.score or entry.value or 0) or entry or 0
+        values[aid] = {
+            score = seconds and score / seconds or 0,
+            best = type(entry) == "table" and (entry.best or entry.is_best) or false,
+            worst = type(entry) == "table" and (entry.worst or entry.is_worst) or false,
+        }
+    end
+
+    return {
+        id = "damage_per_second",
+        label = "row_damage_per_second",
+        parent = "damage_dealt",
+        depth = (row.depth or 0) + 1,
+        style = "sub",
+        decimals = 0,
+        suffix = "/s",
+        zero_text = not seconds and "--" or nil,
+        values = values,
+    }
+end
+
 local function _configure_hit_percentage(row)
     local enabled
     if row.id == "headshots" then
@@ -1810,6 +1837,7 @@ local function _filter_scoreboard_sections(sections, show_all_enemy_rows, show_a
                 local removed_row = row.id == "killed_by_other"
                     or row.id == "elite_radio_operator_killed"
                     or row.id == "dot_electrocution_damage"
+                    or row.id == "companion_damage"
 
                 if not removed_row and row_visible and not _is_effectiveness_row(row) then
                     _configure_hit_percentage(row)
@@ -1823,6 +1851,9 @@ local function _filter_scoreboard_sections(sections, show_all_enemy_rows, show_a
                     else
                         rows[#rows + 1] = row
                         _append_ability_detail_rows(rows, row, show_survival_details, duration)
+                        if row.id == "damage_dealt" and show_all_dot_rows then
+                            rows[#rows + 1] = mod._damage_per_second_row(row, duration)
+                        end
                     end
                 end
             end
@@ -1912,6 +1943,11 @@ function mod.get_live_scoreboard_rows()
                 local data = _Stats.data_for(stat.stat_id)
                 local entry = data and data[aid]
                 value = entry and entry.score or 0
+            elseif stat.per_second_stat_id then
+                local data = _Stats.data_for(stat.per_second_stat_id)
+                local entry = data and data[aid]
+                local elapsed = mod.get_scoreboard_duration()
+                value = elapsed > 0 and (entry and entry.score or 0) / elapsed or 0
             elseif stat.numerator_stat_id and stat.denominator_stat_id then
                 local numerator_data = _Stats.data_for(stat.numerator_stat_id)
                 local denominator_data = _Stats.data_for(stat.denominator_stat_id)

@@ -315,7 +315,7 @@ local STAT_DEFS = {
     { id = "dot_soulblaze_damage", label = "row_dot_soulblaze_damage", cat = "combat",       dir = "asc",  accum = "add", parent = "dot_damage", style = "sub" },
     { id = "dot_burning_damage",   label = "row_dot_burning_damage",   cat = "combat",       dir = "asc",  accum = "add", parent = "dot_damage", style = "sub" },
     { id = "dot_toxin_damage",     label = "row_dot_toxin_damage",     cat = "combat",       dir = "asc",  accum = "add", parent = "dot_damage", style = "sub" },
-    { id = "companion_damage",     label = "row_companion_damage",     cat = "combat",       dir = "asc",  accum = "add", parent = "damage_details", style = "sub" },
+    { id = "companion_damage",     label = "row_companion_damage",     cat = "combat",       dir = "asc",  accum = "add", parent = "damage_details", hidden = true, style = "sub" },
     { id = "damage_to_bosses",     label = "row_damage_to_bosses",     cat = "combat",       dir = "asc",  accum = "add", parent = "damage_details", style = "sub" },
 
     { id = "combat_utility",       label = "row_utility",              cat = "combat",       dir = "asc",  accum = "set", style = "main", no_values = true },
