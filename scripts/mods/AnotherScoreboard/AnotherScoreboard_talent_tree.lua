@@ -9,7 +9,8 @@ local Colors = mod:original_require("scripts/utilities/ui/colors")
 
 local Tree = {}
 Tree.__index = Tree
-local X, Y, W, H = -86, 168, 1072, 487
+-- Must match the tree frame in AnotherScoreboard_loadout_render (panel content area).
+local X, Y, W, H = -86, 168, 1072, 639
 local serial = 0
 
 -- Snapshot IDs are evidence of selection only when the entire layout contract matches.

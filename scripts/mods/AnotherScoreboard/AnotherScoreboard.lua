@@ -92,6 +92,7 @@ local LIVE_STAT_CATALOG = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherS
 local ARCHETYPE_CATALOG = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_archetypes")
 local SCOREBOARD_STAT_CATALOG = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_scoreboard_stats")
 local THEME_CATALOG = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_themes")
+mod._forced_assist = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_forced_assist")
 mod._late_players = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_late_players")
 
 local math_floor = math.floor
@@ -537,6 +538,7 @@ local function _clear_unit_runtime_caches()
     for k in pairs(_combat_ability_charges) do _combat_ability_charges[k] = nil end
     for k in pairs(mod._damage_taken_unit_by_account) do mod._damage_taken_unit_by_account[k] = nil end
     for k in pairs(mod._player_roster) do mod._player_roster[k] = nil end
+    mod._forced_assist.reset()
 
     table_clear(mod._enemy_health)
     table_clear(mod._last_hitter_account_id)
@@ -1043,6 +1045,7 @@ local function _sample_combat_ability_uses(players)
                         and charges < previous.charges then
                     _Stats.record("combat_ability_uses", aid, 1)
                     _runtime_stat_revision = _runtime_stat_revision + 1
+                    mod._forced_assist.on_ability_used(player, aid, _gameplay_time())
                 end
 
                 _combat_ability_charges[aid] = {
@@ -2852,6 +2855,7 @@ function(func, self, unit, dt, t, ...)
         local comp = self._character_state_read_component
         if comp then _track_player_state(unit, comp.state_name) end
         local ud_ext = ScriptUnit.has_extension(unit, "unit_data_system")
+        if p and comp then mod._forced_assist.sample(unit, p, comp.state_name, ud_ext) end
         if ud_ext and ud_ext:has_component("disabled_character_state") then
             local dc = ud_ext:read_component("disabled_character_state")
             local dtype = dc and dc.disabling_type
@@ -2876,6 +2880,7 @@ function(func, self, unit, dt, t, ...)
         local comp = self._character_state_component
         if comp then _track_player_state(unit, comp.state_name) end
         local ud_ext = ScriptUnit.has_extension(unit, "unit_data_system")
+        if p and comp then mod._forced_assist.sample(unit, p, comp.state_name, ud_ext) end
         if ud_ext and ud_ext:has_component("disabled_character_state") then
             local dc = ud_ext:read_component("disabled_character_state")
             local dtype = dc and dc.disabling_type
@@ -2961,6 +2966,11 @@ function(func, self, result, interactor_unit, ...)
                 local interaction_type = self:interaction_type() or ""
                 local aid = _account_id(p)
 
+                if interaction_type == "revive" or interaction_type == "rescue"
+                        or interaction_type == "remove_net" or interaction_type == "pull_up" then
+                    mod._forced_assist.on_interaction_success(self._unit)
+                end
+
                 if interaction_type == "revive" or interaction_type == "rescue" then
                     _Stats.record("revives_and_rescues", aid, 1)
                 elseif interaction_type == "remove_net" then
@@ -2980,6 +2990,35 @@ function(func, self, result, interactor_unit, ...)
         end
     end
     return func(self, result, interactor_unit, ...)
+end)
+
+-- Forced assists (servo skull, Veteran shout) have no player interaction; see AnotherScoreboard_forced_assist.
+mod:hook_safe("PlayerInteracteeExtension", "started", function(self, interactor_unit)
+    mod._forced_assist.on_interaction_started(self._unit)
+end)
+
+-- Dedicated/remote server: the skull's effect arrives as an RPC.
+mod:hook_safe("FxSystem", "rpc_start_template_effect",
+function(self, channel_id, buffer_index, template_id, optional_unit_id)
+    local template_name = template_id and NetworkLookup.effect_templates[template_id]
+    if template_name ~= "companion_servo_skull_heal_effect" then return end
+    local unit_spawner = Managers.state and Managers.state.unit_spawner
+    mod._forced_assist.on_effect_started(template_name, unit_spawner and optional_unit_id and unit_spawner:unit(optional_unit_id))
+end)
+
+-- Local server (Psykanium): the behavior tree starts the effect directly.
+mod:hook_safe("FxSystem", "start_template_effect", function(self, template, optional_unit)
+    if template and template.name == "companion_servo_skull_heal_effect" then
+        mod._forced_assist.on_effect_started(template.name, optional_unit)
+    end
+end)
+
+-- Skull and shout assists count like the equivalent player interactions (player ledge pull-ups are not counted).
+mod._forced_assist.set_recorder(function(kind, helper_aid)
+    if _Stats then
+        _Stats.record(kind, helper_aid, 1)
+        _runtime_stat_revision = _runtime_stat_revision + 1
+    end
 end)
 
 -- The tactical overlay is not registered in every game mode.
@@ -3216,6 +3255,8 @@ mod.update = function(dt)
     local players = player_mgr:human_players() or {}
     mod._sync_player_roster(players)
     _sample_combat_ability_uses(players)
+    mod._forced_assist.set_players(players)
+    mod._forced_assist.update()
 
     _aggro_sample_timer = _aggro_sample_timer + dt
     if _aggro_sample_timer >= AGGRO_SAMPLE_INTERVAL then

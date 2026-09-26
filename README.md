@@ -1,4 +1,4 @@
-# AnotherScoreboard v1.2.8
+# AnotherScoreboard v2.0.0
 
 A detailed, performance-focused scoreboard for Warhammer 40,000: Darktide. Track the mission while you play, review end-of-mission results, monitor a configurable Live Stats HUD, see boss-damage summaries, and keep a persistent local history of completed missions.
 
@@ -54,6 +54,7 @@ The Live Stats HUD shows all human players and one to three selected statistics 
 - Duplicate selections swap columns instead of producing repeated values
 - Save separate Live Stats choices for each player class
 - Adjust scale, position, and background opacity
+- Long player names are shortened with "..." to fit on one line
 
 ### Boss Damage Popup
 
@@ -89,13 +90,13 @@ History files are stored locally under:
 
 ### Squad Loadouts and Talent Trees
 
-On an end-of-mission or history scoreboard, press **U** to open Squad Loadouts. Player cards show class icons, weapons, and recorded signature talents. Hover a signature talent for its description; long descriptions can be paged with the mouse wheel.
+On an end-of-mission or history scoreboard, press **U** to open Squad Loadouts. Player tabs at the top show each player's number key, class icon, and name. The view is split into Weapons, Curios, and Signature Talents sections. Weapon cards show base stats as bars and list perks and blessings with tier markers; hover a weapon for the full perk and blessing descriptions. Hover a signature talent for its description; long descriptions can be paged with the mouse wheel.
 
 Weapon cards use Darktide's native item renderer to show the weapon's standard model instead of its Rank. Thumbnails are available for mission snapshots recorded by v1.2.5 or later; older history entries continue to show their saved weapon details without an image. Saved mission scoreboards preload weapon thumbnails before you open Squad Loadouts.
 
 Three curio cards show each equipped curio's main Health, Toughness, Stamina, or Wounds bonus. Hover a curio to see its additional perks. Curios are recorded in new mission snapshots starting with v1.2.7; older entries show that curio data was not recorded.
 
-Press **T** inside Squad Loadouts to show that player's full talent tree using the game's native node, connection, icon, and tooltip styling. Use the mouse wheel to zoom, left-drag to pan, and hover a node for details. Press **1-4**, click anywhere on a player card, or use the wheel in the loadout view to change player. This view is read-only: it cannot spend or remove talent points.
+Press **T**, or click the view switch at the top right, to show that player's full talent tree using the game's native node, connection, icon, and tooltip styling. Use the mouse wheel to zoom, left-drag to pan, and hover a node for details. Press **1-4**, click anywhere on a player card, or use the wheel in the loadout view to change player. This view is read-only: it cannot spend or remove talent points.
 
 Talent trees come from the saved mission build. If the current game tree no longer matches the saved layout or selections, AnotherScoreboard displays a notice instead of an inaccurate tree.
 
@@ -215,9 +216,9 @@ An enemy can contribute more than one stagger if it is staggered by multiple qua
 | --- | --- |
 | HP Lost | Sum of positive increases in the player's accumulated health damage |
 | Downs & Deaths | Number of transitions into knocked-down or dead states |
-| Revives & Rescues | Count of successful revives and rescues credited to the player |
+| Revives & Rescues | Count of successful revives and rescues credited to the player, including revives by the player's Skitarii medicae servo skull and by a Veteran shout with the revive talent |
 | Disabled | Number of new disabling states such as nets, pounces, grabs, or being consumed |
-| Disabled Helped | Count of credited assists that free a disabled teammate |
+| Disabled Helped | Count of credited assists that free a disabled teammate, including net releases by the player's Skitarii servo skull |
 | Medicae Uses | Count of successful health-station interactions |
 
 Healing does not subtract from HP Lost. Lower values are treated as better for HP Lost, Downs & Deaths, Disabled, and Medicae Uses.
@@ -239,7 +240,7 @@ Ammo Pickups measures how many pickups were taken, while Ammo Gained estimates h
 - Counts display as whole numbers.
 - Large damage values use `K` or `M` where needed.
 - Ratios and coherency display as rounded whole percentages.
-- Green marks the best value and red marks the worst value on ranked rows.
+- Green, with a marker behind the value, marks the best value and red marks the worst value on ranked rows.
 - For negative statistics such as HP Lost and Disabled, the lowest value is ranked best.
 
 ## License
