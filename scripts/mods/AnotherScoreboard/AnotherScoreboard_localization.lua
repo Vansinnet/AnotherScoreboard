@@ -134,6 +134,26 @@ local localization = {
         en = "Specialization",
         ["zh-cn"] = "专精方向",
     },
+    loadout_weapons = {
+        en = "Weapons",
+        ["zh-cn"] = "武器",
+    },
+    loadout_signature = {
+        en = "Signature Talents",
+        ["zh-cn"] = "核心天赋",
+    },
+    loadout_slot_primary = {
+        en = "Melee",
+        ["zh-cn"] = "近战",
+    },
+    loadout_slot_secondary = {
+        en = "Ranged",
+        ["zh-cn"] = "远程",
+    },
+    loadout_weapon_hover = {
+        en = "Hover over a weapon for full perk and blessing descriptions",
+        ["zh-cn"] = "悬停武器查看完整的词条和祝福说明",
+    },
     loadout_hint_open = {
         en = "[U] Loadouts",
         ["zh-cn"] = "[U] 配装",
@@ -147,8 +167,8 @@ local localization = {
         ["zh-cn"] = "鼠标滚轮：上一页 / 下一页描述",
     },
     loadout_hint_equipment = {
-        en = "[U / Esc] Back  |  [1-4 / Wheel / Click player] Player  |  [T] Tree  |  [Hover curio / talent] Details",
-        ["zh-cn"] = "[U / Esc] 返回  |  [1-4 / 滚轮 / 点击玩家] 玩家  |  [T] 天赋树  |  [悬停珍品/天赋] 详情",
+        en = "[U / Esc] Back  |  [1-4 / Wheel / Click player] Player  |  [T] Tree  |  [Hover weapon / curio / talent] Details",
+        ["zh-cn"] = "[U / Esc] 返回  |  [1-4 / 滚轮 / 点击玩家] 玩家  |  [T] 天赋树  |  [悬停武器/珍品/天赋] 详情",
     },
     loadout_hint_tree = {
         en = "[U / Esc] Back  |  [1-4 / Click player] Player  |  [T] Weapons  |  [Wheel] Zoom  |  [Left drag] Pan  |  [Hover talent] Details",

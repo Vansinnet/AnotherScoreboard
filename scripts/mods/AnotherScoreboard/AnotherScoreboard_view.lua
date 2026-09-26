@@ -169,6 +169,10 @@ ASView._select_loadout_player = function(self, index)
     if index ~= self._loadout_player then self._pending_loadout_player = index end
 end
 
+ASView._request_loadout_tree_toggle = function(self)
+    self._pending_loadout_tree_toggle = true
+end
+
 ASView._open_player_social = function(self, account_id)
     if mod.open_player_social then
         mod.open_player_social(account_id)
@@ -199,27 +203,48 @@ ASView._build_hint = function(self, built, hint_text)
     end
 
     local panel = built.panel
-    local footer_x = panel and panel.x or 0
-    local footer_y = panel and panel.y + panel.h or VIEW_H - HISTORY_FOOTER_H
-    local footer_w = panel and panel.w or VIEW_W
     local Render = mod:get_render()
-    local colors = Render and Render.theme_colors and Render.theme_colors()
-    local hint_text_color = colors and colors.history_hint_text or HISTORY_HINT_TEXT
-    local footer_color = colors and colors.history_footer or HISTORY_FOOTER_COLOR
-    local hint_font_size = math.floor(17 * (built.text_scale or 1))
-    if Render and Render.fit_text_font_size then
-        hint_font_size = Render.fit_text_font_size(self, nil, hint_text, "proxima_nova_bold",
-            hint_font_size, footer_w - 32, 24)
-    end
+    local footer_h = Render and Render.footer_height and Render.footer_height() or HISTORY_FOOTER_H
+    local footer_x = panel and panel.x or 0
+    local footer_y = panel and panel.y + panel.h or VIEW_H - footer_h
+    local footer_w = panel and panel.w or VIEW_W
 
     self._scoreboard_hint_text = hint_text
     local displayed_hint = self._context and self._context.end_view and self._temporarily_hidden
         and mod:localize("scoreboard_hint_end_show") or hint_text
-    self._history_hint_widget = self:_create_widget("as_scoreboard_hint", UIWidget.create_definition({
-        rect_pass(footer_x, footer_y, BASE_Z + 20, footer_w, HISTORY_FOOTER_H, footer_color),
-        text_pass("hint", displayed_hint, footer_x + 16, footer_y + 6,
-            BASE_Z + 22, footer_w - 32, 24, hint_font_size, hint_text_color),
-    }, "content_area", nil, { VIEW_W, VIEW_H }))
+    local styled_hint, plain_hint = displayed_hint, displayed_hint
+    if Render and Render.style_hint then
+        styled_hint, plain_hint = Render.style_hint(displayed_hint)
+    end
+
+    local hint_font_size = math.floor(16 * (built.text_scale or 1))
+    if Render and Render.fit_text_font_size then
+        hint_font_size = Render.fit_text_font_size(self, nil, plain_hint, "proxima_nova_bold",
+            hint_font_size, footer_w - 32, footer_h - 8)
+    end
+
+    local passes
+    if Render and Render.footer_passes then
+        passes = Render.footer_passes(footer_x, footer_y, footer_w, footer_h, "hint", styled_hint, hint_font_size)
+    else
+        passes = {
+            rect_pass(footer_x, footer_y, BASE_Z + 20, footer_w, footer_h, HISTORY_FOOTER_COLOR),
+            text_pass("hint", displayed_hint, footer_x + 16, footer_y + 6,
+                BASE_Z + 22, footer_w - 32, 24, hint_font_size, HISTORY_HINT_TEXT),
+        }
+    end
+
+    self._history_hint_widget = self:_create_widget("as_scoreboard_hint", UIWidget.create_definition(
+        passes, "content_area", nil, { VIEW_W, VIEW_H }))
+end
+
+ASView._styled_hint = function(self, text)
+    local Render = mod:get_render()
+    if Render and Render.style_hint then
+        return (Render.style_hint(text))
+    end
+
+    return text
 end
 
 ASView._build = function(self)
@@ -475,7 +500,8 @@ ASView.update = function(self, dt, t, input_service)
                 rebuild = true
             end
         end
-        if Keyboard.pressed(T_KEY) then
+        if Keyboard.pressed(T_KEY) or self._pending_loadout_tree_toggle then
+            self._pending_loadout_tree_toggle = nil
             self._loadout_tree = not self._loadout_tree
             rebuild = true
         end
@@ -515,8 +541,8 @@ ASView.update = function(self, dt, t, input_service)
     if end_view and Keyboard.pressed(Q_KEY) then
         self._temporarily_hidden = not self._temporarily_hidden
         if self._history_hint_widget then
-            self._history_hint_widget.content.hint = self._temporarily_hidden
-                and mod:localize("scoreboard_hint_end_show") or self._scoreboard_hint_text
+            self._history_hint_widget.content.hint = self:_styled_hint(self._temporarily_hidden
+                and mod:localize("scoreboard_hint_end_show") or self._scoreboard_hint_text)
             self._history_hint_widget.dirty = true
         end
     end

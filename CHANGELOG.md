@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.0
+
+- New visual design for the full scoreboard on the Tab overlay, end screen, and Scoreboard History: a title card, player header cards with class-colored bars, subtle player columns, left-aligned section headings with an accent marker, zebra and detail-row shading, and a green marker behind the best value in each ranked row.
+- The scoreboard footer highlights hotkeys in the theme's accent color.
+- New palettes for all six themes. Theme names and saved theme choices are unchanged, so existing users see the new look automatically. Live Stats and the Boss Popup keep their previous colors.
+- Redesigned Squad Loadouts (U): player tabs with 1-4 key badges, a clickable Weapons & Signature Talents / Talent Tree switch, sectioned layout, weapon cards with stat bars and tier markers for perks and blessings, weapon hover cards with full perk and blessing descriptions, curio cards colored by type, and signature talent cards with category labels.
+- Squad Loadouts keeps the same window size in both views and for players without a recorded loadout; the talent tree uses the larger area.
+- Revives and rescues by the Skitarii medicae servo skull now count toward the Skitarii's Revives & Rescues, and net releases by the skull toward Disabled helped. Revives by a Veteran shout with the revive talent count toward the Veteran. They are detected client-side from the skull's heal effect, the forced assist, and the player's state change; player interactions are never counted twice.
+- Live Stats shortens long player names with "..." so they fit on one line instead of wrapping.
+
 ## 1.2.8
 
 - Increased Squad Loadouts weapon thumbnail render resolution to 600×216 while preserving their existing display size.

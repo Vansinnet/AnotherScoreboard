@@ -31,6 +31,7 @@ local PLAYER_COL_W = 102
 local PLAYER_ICON_W = 14
 local PLAYER_ICON_GAP = 3
 local STAT_COL_W = 64
+local MEASURE_SIZE = { 10000, 1000 }
 
 local ROW_WIDGET_NAMES = {
     "live_scoreboard_row_1",
@@ -256,11 +257,55 @@ local function short_name(name)
         return "?"
     end
 
-    if utf8_string_length(name) > 13 then
-        return utf8_sub_string(name, 1, 13)
+    if utf8_string_length(name) > 24 then
+        return utf8_sub_string(name, 1, 24)
     end
 
     return name
+end
+
+-- Shortens a name with "..." so it fits on one line; results are cached per name, font size and width.
+local function fitted_name(self, ui_renderer, name, style, max_width)
+    name = short_name(name)
+    if not ui_renderer or type(self._text_size) ~= "function" or max_width <= 0 then
+        return name
+    end
+
+    local key = name .. "\0" .. style.font_size .. "\0" .. max_width
+    local cache = self._as_name_fit_cache
+    if not cache or self._as_name_fit_count > 64 then
+        cache = {}
+        self._as_name_fit_cache = cache
+        self._as_name_fit_count = 0
+    end
+    if cache[key] then
+        return cache[key]
+    end
+
+    -- An explicit large area stops the measurement from wrapping inside the style's own size.
+    local function fits(candidate)
+        return self:_text_size(ui_renderer, candidate, style, MEASURE_SIZE) <= max_width
+    end
+
+    local result = name
+    if not fits(name) then
+        local low, high, best = 1, utf8_string_length(name) - 1, "..."
+        while low <= high do
+            local middle = math_floor((low + high) / 2)
+            local candidate = utf8_sub_string(name, 1, middle) .. "..."
+            if fits(candidate) then
+                best, low = candidate, middle + 1
+            else
+                high = middle - 1
+            end
+        end
+        result = best
+    end
+
+    cache[key] = result
+    self._as_name_fit_count = self._as_name_fit_count + 1
+
+    return result
 end
 
 local function set_size(style, width, height)
@@ -489,7 +534,7 @@ function HudElementLiveScoreboard:update(dt, t, ui_renderer, render_settings, in
             end
 
             row_widget.content.player_icon = row.archetype_icon or ""
-            row_widget.content.player = short_name(row.name)
+            row_widget.content.player = fitted_name(self, ui_renderer, row.name, row_style.player, player_name_w - 2)
             for j = 1, stat_count do
                 row_widget.content["stat_" .. j] = format_value(row.values[j] or 0, stat_columns[j].format)
             end
