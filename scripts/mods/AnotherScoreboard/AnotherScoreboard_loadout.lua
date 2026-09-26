@@ -148,6 +148,7 @@ local function capture_profile(profile)
     local selected_talents = profile.talents or {}
     local selected_nodes = profile.selected_nodes
     local points_by_talent = {}
+    local icon_by_talent = {}
     local layouts = TalentLayoutParser.archetype_layouts(archetype)
     for i = 1, #layouts do
         local layout = layouts[i]
@@ -155,6 +156,10 @@ local function capture_profile(profile)
         snapshot.layouts[#snapshot.layouts + 1] = captured_layout
         for j = 1, #layout.nodes do
             local node = layout.nodes[j]
+            -- Some talent definitions (e.g. cryptic_chordclaw) have no icon; the tree node does.
+            if node.talent and node.icon and not icon_by_talent[node.talent] then
+                icon_by_talent[node.talent] = node.icon
+            end
             -- Talents also include granted base tiers; only node tiers prove tree selection.
             local tier = selected_nodes and selected_nodes[node.widget_name]
             if type(tier) == "number" and tier > 0 then
@@ -207,7 +212,7 @@ local function capture_profile(profile)
             tier = tier,
             name = definition and TalentLayoutParser.talent_title(definition, points) or id,
             description = definition and definition.description and TalentLayoutParser.talent_description(definition, points),
-            icon = definition and definition.icon,
+            icon = definition and definition.icon or icon_by_talent[id],
         }
         local ability = definition and definition.player_ability
         local category = ability and (ability.ability_type == "grenade_ability" and "blitz"

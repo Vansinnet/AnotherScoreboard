@@ -13,6 +13,7 @@ return {
     { key = "weakspot_ratio", numerator_stat_id = "weakspot_ratio_hits", denominator_stat_id = "melee_ranged_hits", option = "live_stat_weakspot_ratio", header = "live_header_weakspot_ratio", format = "percent" },
     { key = "boss_damage", stat_id = "damage_to_bosses", option = "live_stat_boss_damage", header = "live_header_boss_damage", format = "short" },
     { key = "coherency", option = "live_stat_coherency", header = "live_header_coherency", format = "percent" },
+    { key = "damage_per_second", per_second_stat_id = "_total_damage", option = "live_stat_damage_per_second", header = "live_header_damage_per_second", format = "count" },
     { key = "melee_damage", stat_id = "melee_damage", option = "live_stat_melee_damage", header = "live_header_melee_damage", format = "short" },
     { key = "ranged_damage", stat_id = "ranged_damage", option = "live_stat_ranged_damage", header = "live_header_ranged_damage", format = "short" },
     { key = "dot_damage", stat_id = "dot_damage", option = "live_stat_dot_damage", header = "live_header_dot_damage", format = "short" },

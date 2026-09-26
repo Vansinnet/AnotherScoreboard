@@ -9,7 +9,6 @@ return {
     { id = "ranged_damage", label = "row_ranged_damage", section = "combat" },
     { id = "other_damage", label = "row_other_damage", section = "combat" },
     { id = "dot_damage", label = "row_dot_damage", section = "combat" },
-    { id = "companion_damage", label = "row_companion_damage", section = "combat" },
     { id = "damage_to_bosses", label = "row_damage_to_bosses", section = "combat" },
     { id = "headshots", label = "row_headshots", section = "combat" },
     { id = "critical_hits", label = "row_critical_hits", section = "combat" },

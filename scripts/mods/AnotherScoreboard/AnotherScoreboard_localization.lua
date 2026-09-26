@@ -499,6 +499,10 @@ local localization = {
 	    en = "Companion damage",
 	    ["zh-cn"] = "同伴伤害",
 	},
+	live_stat_damage_per_second = {
+	    en = "Damage per second",
+	    ["zh-cn"] = "每秒伤害",
+	},
 	live_stat_other_damage = {
 	    en = "Other damage",
 	    ["zh-cn"] = "其他伤害",
@@ -694,6 +698,10 @@ local localization = {
 	live_header_companion_damage = {
 	    en = "Comp Dmg",
 	    ["zh-cn"] = "同伴伤害",
+	},
+	live_header_damage_per_second = {
+	    en = "DPS",
+	    ["zh-cn"] = "DPS",
 	},
 	live_header_other_damage = {
 	    en = "Other Dmg",
@@ -953,6 +961,10 @@ local localization = {
 	row_other_damage = {
 	    en = "Other damage",
 	    ["zh-cn"] = "其他伤害",
+	},
+	row_damage_per_second = {
+	    en = "Damage per second",
+	    ["zh-cn"] = "每秒伤害",
 	},
 	row_other_dot_damage = {
 	    en = "Damage over time",
