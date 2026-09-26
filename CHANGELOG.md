@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- The R hotkey is now "Damage Details". It still shows the DoT types and now also splits Other damage into Damage over time, Explosions, Arc lightning, Companion, Electrocution, and Unclassified. Scoreboards saved before this change have no Other damage breakdown.
+- Live Stats can now show Other damage, Explosion damage, Arc lightning damage, and Electrocution damage.
+
 ## 2.0.0
 
 - New visual design for the full scoreboard on the Tab overlay, end screen, and Scoreboard History: a title card, player header cards with class-colored bars, subtle player columns, left-aligned section headings with an accent marker, zebra and detail-row shading, and a green marker behind the best value in each ranked row.
