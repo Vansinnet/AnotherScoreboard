@@ -499,6 +499,22 @@ local localization = {
 	    en = "Companion damage",
 	    ["zh-cn"] = "同伴伤害",
 	},
+	live_stat_other_damage = {
+	    en = "Other damage",
+	    ["zh-cn"] = "其他伤害",
+	},
+	live_stat_explosion_damage = {
+	    en = "Explosion damage",
+	    ["zh-cn"] = "爆炸伤害",
+	},
+	live_stat_arc_damage = {
+	    en = "Arc lightning damage",
+	    ["zh-cn"] = "电弧伤害",
+	},
+	live_stat_electrocution_damage = {
+	    en = "Electrocution damage",
+	    ["zh-cn"] = "电击伤害",
+	},
 	live_stat_enemies_staggered = {
 	    en = "Enemies staggered",
 	    ["zh-cn"] = "使敌人失衡",
@@ -678,6 +694,22 @@ local localization = {
 	live_header_companion_damage = {
 	    en = "Comp Dmg",
 	    ["zh-cn"] = "同伴伤害",
+	},
+	live_header_other_damage = {
+	    en = "Other Dmg",
+	    ["zh-cn"] = "其他伤害",
+	},
+	live_header_explosion_damage = {
+	    en = "Explosion",
+	    ["zh-cn"] = "爆炸",
+	},
+	live_header_arc_damage = {
+	    en = "Arc",
+	    ["zh-cn"] = "电弧",
+	},
+	live_header_electrocution_damage = {
+	    en = "Electro",
+	    ["zh-cn"] = "电击",
 	},
 	live_header_enemies_staggered = {
 	    en = "Staggered",
@@ -921,6 +953,30 @@ local localization = {
 	row_other_damage = {
 	    en = "Other damage",
 	    ["zh-cn"] = "其他伤害",
+	},
+	row_other_dot_damage = {
+	    en = "Damage over time",
+	    ["zh-cn"] = "持续伤害",
+	},
+	row_other_explosion_damage = {
+	    en = "Explosions",
+	    ["zh-cn"] = "爆炸",
+	},
+	row_other_arc_damage = {
+	    en = "Arc lightning",
+	    ["zh-cn"] = "电弧",
+	},
+	row_other_companion_damage = {
+	    en = "Companion",
+	    ["zh-cn"] = "伙伴",
+	},
+	row_other_electrocution_damage = {
+	    en = "Electrocution",
+	    ["zh-cn"] = "电击",
+	},
+	row_other_misc_damage = {
+	    en = "Unclassified",
+	    ["zh-cn"] = "未分类",
 	},
 	row_damage_details = {
 	    en = "Damage details",
@@ -1286,12 +1342,12 @@ local localization = {
 	    ["zh-cn"] = "E - 隐藏精英敌人",
 	},
 	scoreboard_hint_dot = {
-	    en = "R - DoT types",
-	    ["zh-cn"] = "R - 持续伤害类型",
+	    en = "R - Damage Details",
+	    ["zh-cn"] = "R - 伤害详情",
 	},
 	scoreboard_hint_hide_dot = {
-	    en = "R - Hide DoT types",
-	    ["zh-cn"] = "R - 隐藏持续伤害类型",
+	    en = "R - Hide Damage Details",
+	    ["zh-cn"] = "R - 隐藏伤害详情",
 	},
 	scoreboard_hint_boss = {
 	    en = "T - Boss types",

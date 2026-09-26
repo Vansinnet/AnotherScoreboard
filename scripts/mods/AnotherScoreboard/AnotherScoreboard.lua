@@ -1561,7 +1561,7 @@ function mod.scoreboard_detail_available(detail)
             or _scoreboard_stat_visible("specials_killed")
             or _scoreboard_stat_visible("elites_killed")
     elseif detail == "dot" then
-        return _scoreboard_stat_visible("dot_damage")
+        return _scoreboard_stat_visible("dot_damage") or _scoreboard_stat_visible("other_damage")
     elseif detail == "boss" then
         return _scoreboard_stat_visible("damage_to_bosses")
     elseif detail == "survival" then
@@ -1597,7 +1597,7 @@ function mod.get_scoreboard_hint_text(show_enemy_details, show_dot_details, show
         parts[#parts + 1] = mod:localize(hint_id)
     end
 
-    if _scoreboard_stat_visible("dot_damage") then
+    if _scoreboard_stat_visible("dot_damage") or _scoreboard_stat_visible("other_damage") then
         parts[#parts + 1] = mod:localize(show_dot_details and "scoreboard_hint_hide_dot" or "scoreboard_hint_dot")
     end
 
@@ -1781,8 +1781,9 @@ local function _filter_scoreboard_sections(sections, show_all_enemy_rows, show_a
             for _, row in ipairs(section.rows) do
                 local enemy_detail = _Stats and _Stats.is_enemy_detail(row.id)
                 local dot_detail = _Stats and _Stats.is_dot_detail(row.id)
+                local other_detail = _Stats and _Stats.is_other_detail(row.id)
                 local enemy_row_visible = show_all_enemy_rows or not enemy_detail
-                local dot_row_visible = show_all_dot_rows or not dot_detail
+                local dot_row_visible = show_all_dot_rows or not (dot_detail or other_detail)
                 local boss_row_visible = show_boss_details or not row.boss_detail
                 local survival_detail = row.parent == "downs_and_deaths" or row.parent == "times_disabled"
                 local survival_row_visible = show_survival_details or not survival_detail
@@ -1791,6 +1792,8 @@ local function _filter_scoreboard_sections(sections, show_all_enemy_rows, show_a
                     visibility_stat_id = row.parent
                 elseif dot_detail then
                     visibility_stat_id = "dot_damage"
+                elseif other_detail then
+                    visibility_stat_id = "other_damage"
                 elseif row.boss_detail then
                     visibility_stat_id = "damage_to_bosses"
                 elseif survival_detail then

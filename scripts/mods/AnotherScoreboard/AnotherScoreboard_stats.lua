@@ -95,6 +95,22 @@ local DOT_DETAIL_STATS = {
     dot_toxin_damage = true,
 }
 
+local OTHER_DAMAGE_BY_ATTACK_TYPE = {
+    explosion = "other_explosion_damage",
+    arc = "other_arc_damage",
+    companion_dog = "other_companion_damage",
+    buff = "other_electrocution_damage",
+}
+
+local OTHER_DETAIL_STATS = {
+    other_dot_damage = true,
+    other_explosion_damage = true,
+    other_arc_damage = true,
+    other_companion_damage = true,
+    other_electrocution_damage = true,
+    other_misc_damage = true,
+}
+
 local COMPANION_DAMAGE_PROFILES = {
     default_companion_servo_skull_lasgun_killshot = true,
     improved_companion_servo_skull_lasgun_killshot = true,
@@ -286,6 +302,12 @@ local STAT_DEFS = {
     { id = "melee_damage",         label = "row_melee_damage",         cat = "combat",       dir = "asc",  accum = "add", parent = "damage_dealt", style = "sub" },
     { id = "ranged_damage",        label = "row_ranged_damage",        cat = "combat",       dir = "asc",  accum = "add", parent = "damage_dealt", style = "sub" },
     { id = "other_damage",         label = "row_other_damage",         cat = "combat",       dir = "asc",  accum = "add", parent = "damage_dealt", style = "sub" },
+    { id = "other_dot_damage",       label = "row_other_dot_damage",       cat = "combat",     dir = "asc",  accum = "add", parent = "other_damage", style = "sub" },
+    { id = "other_explosion_damage", label = "row_other_explosion_damage", cat = "combat",     dir = "asc",  accum = "add", parent = "other_damage", style = "sub" },
+    { id = "other_arc_damage",       label = "row_other_arc_damage",       cat = "combat",     dir = "asc",  accum = "add", parent = "other_damage", style = "sub" },
+    { id = "other_companion_damage", label = "row_other_companion_damage", cat = "combat",     dir = "asc",  accum = "add", parent = "other_damage", style = "sub" },
+    { id = "other_electrocution_damage", label = "row_other_electrocution_damage", cat = "combat",     dir = "asc",  accum = "add", parent = "other_damage", style = "sub" },
+    { id = "other_misc_damage",      label = "row_other_misc_damage",      cat = "combat",     dir = "asc",  accum = "add", parent = "other_damage", style = "sub" },
 
     { id = "damage_details",       label = "row_damage_details",       cat = "combat",       dir = "asc",  accum = "set", style = "main", no_values = true },
     { id = "dot_damage",           label = "row_dot_damage",           cat = "combat",       dir = "asc",  accum = "add", parent = "damage_details", style = "sub" },
@@ -1049,6 +1071,10 @@ function Stats.is_dot_detail(stat_id)
     return DOT_DETAIL_STATS[stat_id] == true
 end
 
+function Stats.is_other_detail(stat_id)
+    return OTHER_DETAIL_STATS[stat_id] == true
+end
+
 function Stats.seed_enemy_health(unit, max_health)
     if not unit or not max_health or max_health <= 0 then return end
     local enemy_health = mod._enemy_health
@@ -1166,6 +1192,7 @@ function Stats.handle_attack(aid, damage_profile, attacked_unit, hit_weakspot, d
 
     local boss_result = nil
     local companion_attack = is_companion_attack(damage_profile, attack_type)
+    local dot_stat_id = damage_profile and DOT_PROFILES[damage_profile.name]
     Stats.record("damage_dealt", aid, actual)
     if attack_type == "ranged" then
         Stats.record("ranged_damage", aid, actual)
@@ -1173,8 +1200,12 @@ function Stats.handle_attack(aid, damage_profile, attacked_unit, hit_weakspot, d
         Stats.record("melee_damage", aid, actual)
     else
         Stats.record("other_damage", aid, actual)
+        local other_stat_id = dot_stat_id and "other_dot_damage"
+            or companion_attack and "other_companion_damage"
+            or OTHER_DAMAGE_BY_ATTACK_TYPE[attack_type]
+            or "other_misc_damage"
+        Stats.record(other_stat_id, aid, actual)
     end
-    local dot_stat_id = damage_profile and DOT_PROFILES[damage_profile.name]
     if dot_stat_id then
         Stats.record("dot_damage", aid, actual)
         Stats.record(dot_stat_id, aid, actual)
