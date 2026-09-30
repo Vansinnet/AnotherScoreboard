@@ -170,7 +170,7 @@ local function _row_depth(row)
     return row.parent and 1 or 0
 end
 
-local function _row_value(row, score, percentage)
+local function _row_value(row, score, percentage, damage)
     if score == 0 and row.zero_text then
         return row.zero_text
     end
@@ -181,6 +181,9 @@ local function _row_value(row, score, percentage)
     value = value .. suffix
     if type(percentage) == "number" then
         value = string_format("%s (%.0f%%)", value, percentage)
+    end
+    if type(damage) == "number" then
+        value = string_format("%s (%s)", value, _shorten(damage))
     end
 
     return value
@@ -287,6 +290,7 @@ local function _row_player_data(row, ids, num_players)
         local aid = ids[pi]
         local score = 0
         local percentage = row.display_percentage_values and row.display_percentage_values[aid]
+        local damage = row.display_damage_values and (row.display_damage_values[aid] or 0)
         local vc = _row_depth(row) > 0 and C.sub or C.normal
         local rank
 
@@ -310,7 +314,7 @@ local function _row_player_data(row, ids, num_players)
             end
         end
 
-        player_data[pi] = { score = score, percentage = percentage, color = vc, rank = rank }
+        player_data[pi] = { score = score, percentage = percentage, damage = damage, color = vc, rank = rank }
         if row.external and not (row.values and row.values[aid]) then player_data[pi].score = nil end
     end
 
@@ -427,7 +431,7 @@ local function _add_row_passes(passes, row, row_key, row_y, layout, label_x, lab
             local col_x = ox + gap + label_w + gap + (pi - 1) * (col_w + gap)
             local pd = player_data[pi]
             local value_text = row.external and mod.external_stats.format(row, pd.score)
-                or _row_value(row, pd.score, pd.percentage)
+                or _row_value(row, pd.score, pd.percentage, pd.damage)
             local value_fs = _fit_label_font_size(host, ui_renderer, value_text, "proxima_nova_bold", fs,
                 col_w - _scaled(2), rh)
 
