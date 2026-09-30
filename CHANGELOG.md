@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1
+
+- The number after a boss name on its boss damage row, for example Daemonhost (2), now counts bosses killed. Before, a boss that was only hit also counted, such as a Daemonhost that was shot but left or was never killed. Damage to such a boss still shows on the row.
+- New option "Show damage beside enemy kills" at the top of Toggle Stats in Scoreboard, off by default. It shows each player's damage beside the kills for Lesser Enemies, Specials, Elites, and each enemy type, for example 12 (3.4K), also in Scoreboard History. The damage includes enemies that survived or that another player killed, and it is only recorded while the option is on.
+
 ## 2.0.0
 
 - Game update 1.13.0: Scoreboard History again shows Damnation and Auric instead of "Difficulty 5"; older history entries are fixed as well.

@@ -233,6 +233,8 @@ return {
         { setting_id = "scoreboard_stats_header", type = "group",
           title = "scoreboard_stats_header", tooltip = "scoreboard_stats_header_tooltip",
           sub_widgets = {
+              { setting_id = "show_scoreboard_enemy_kill_damage", type = "checkbox", default_value = false,
+                title = "show_scoreboard_enemy_kill_damage", tooltip = "scoreboard_enemy_kill_damage_tooltip" },
               { setting_id = "scoreboard_stats_combat_header", type = "group",
                 title = "scoreboard_stats_combat_header", tooltip = "scoreboard_stats_group_tooltip",
                 sub_widgets = scoreboard_stat_widgets("combat") },

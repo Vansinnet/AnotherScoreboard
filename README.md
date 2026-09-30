@@ -1,4 +1,4 @@
-# AnotherScoreboard v2.0.0
+# AnotherScoreboard v2.0.1
 
 A detailed, performance-focused scoreboard for Warhammer 40,000: Darktide. Track the mission while you play, review end-of-mission results, monitor a configurable Live Stats HUD, see boss-damage summaries, and keep a persistent local history of completed missions.
 
@@ -117,10 +117,10 @@ Settings are organized by feature:
 - **End-of-Mission Scoreboard:** automatic display, scale, opacity, and position
 - **Live Stats HUD:** enable, class-specific columns, scale, position, and background opacity
 - **Boss Damage Popup:** enable, displayed columns, scale, duration, position, and background opacity
-- **Toggle Stats in Scoreboard:** visibility of individual built-in combat and survival rows
+- **Toggle Stats in Scoreboard:** visibility of individual built-in combat and survival rows, and "Show damage beside enemy kills" (off by default)
 - **Keybinds:** Scoreboard History and External stat details
 
-Hiding a built-in row affects only its display. The mod continues to track and save that statistic.
+Hiding a built-in row affects only its display. The mod continues to track and save that statistic. The exception is damage beside enemy kills, which is recorded only while that option is on.
 
 ## Controls
 
@@ -196,6 +196,7 @@ DoT and boss damage are detail categories inside Total Damage. Do not add them t
 | Ranged Elites / Melee Elites | Elite kills grouped by ranged or melee breed |
 | Individual Enemy Kills | Special or Elite kills grouped by enemy breed |
 | Companion Kills | Count of killing blows caused by the player's companion attacks |
+| Damage beside kills (optional) | Damage the player dealt to Lesser Enemies, Specials, Elites, or one enemy type, shown as `kills (damage)`. It counts all damage to those enemies, including enemies that survived or that another player killed, and excludes overkill like Total Damage |
 
 The same defeated enemy is deduplicated so separate damage and death reports do not count it twice.
 

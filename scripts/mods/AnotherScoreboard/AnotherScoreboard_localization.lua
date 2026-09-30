@@ -883,6 +883,12 @@ local localization = {
 	    en = "Show Critical hit percentage",
 	    ["zh-cn"] = "显示暴击命中率",
 	},
+	show_scoreboard_enemy_kill_damage = {
+	    en = "Show damage beside enemy kills",
+	},
+	scoreboard_enemy_kill_damage_tooltip = {
+	    en = "Show each player's damage to Lesser Enemies, Specials, Elites, and each enemy type beside their kill count, for example 12 (3.4K). The damage includes enemies that another player killed or that survived. It is recorded only while this option is on.",
+	},
 	scoreboard_hit_percentage_tooltip = {
 	    en = "Show the percentage of valid melee and ranged hits beside each player's hit count.",
 	    ["zh-cn"] = "在每名玩家的命中数旁显示有效近战和远程命中百分比。",

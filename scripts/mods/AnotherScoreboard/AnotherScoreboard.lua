@@ -636,6 +636,10 @@ local function _refresh_settings()
     _settings.scoreboard_theme = THEME_CATALOG.by_id[scoreboard_theme] and scoreboard_theme or THEME_CATALOG.default
     _settings.show_weakspot_percentage = mod:get("show_scoreboard_weakspot_percentage") ~= false
     _settings.show_critical_percentage = mod:get("show_scoreboard_critical_percentage") ~= false
+    _settings.show_enemy_kill_damage = mod:get("show_scoreboard_enemy_kill_damage") == true
+    if _Stats then
+        _Stats.set_kill_damage_enabled(_settings.show_enemy_kill_damage)
+    end
 
     for stat_id, setting_id in pairs(SCOREBOARD_STAT_SETTING_BY_ID) do
         _settings.scoreboard_stat_visibility[stat_id] = mod:get(setting_id) ~= false
@@ -1781,6 +1785,20 @@ local function _configure_hit_percentage(row)
     row.rate_label = row.show_percentage
 end
 
+function mod._configure_kill_damage(row)
+    local damage_values
+
+    if _settings.show_enemy_kill_damage then
+        if row.values then
+            damage_values = row.damage_values
+        elseif _Stats then
+            damage_values = _Stats.kill_damage_values(row.id)
+        end
+    end
+
+    row.display_damage_values = damage_values
+end
+
 local function _append_ability_detail_rows(rows, row, show_survival_details, duration)
     if row.id == "combat_ability_uses" and show_survival_details then
         rows[#rows + 1] = _ability_rate_row(row, duration)
@@ -1841,6 +1859,7 @@ local function _filter_scoreboard_sections(sections, show_all_enemy_rows, show_a
 
                 if not removed_row and row_visible and not _is_effectiveness_row(row) then
                     _configure_hit_percentage(row)
+                    mod._configure_kill_damage(row)
                     if section_key == "performance" then
                         if row.id == "headshots" or row.id == "enemies_staggered" then
                             combat_utility_rows[#combat_utility_rows + 1] = row

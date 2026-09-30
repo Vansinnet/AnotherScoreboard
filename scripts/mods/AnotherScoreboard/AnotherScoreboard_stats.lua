@@ -187,16 +187,27 @@ local function _record_boss_type_damage(boss_unit, breed, aid, actual)
         _boss_damage_by_type[identity.type_name] = data
     end
 
-    if not identity.counted then
-        data.count = (data.count or 0) + 1
-        identity.counted = true
+    data.values[aid] = (data.values[aid] or 0) + actual
+end
 
-        if data.count > 1 and data.breed_localization_key then
-            data.localization_key = data.breed_localization_key
-        end
+-- The row count is bosses killed; a boss that is only damaged, or leaves by despawning, adds none.
+local function _count_boss_kill(boss_unit)
+    local identity = _boss_identities[boss_unit]
+    if not identity or identity.counted then
+        return
     end
 
-    data.values[aid] = (data.values[aid] or 0) + actual
+    local data = _boss_damage_by_type[identity.type_name]
+    if not data then
+        return
+    end
+
+    data.count = (data.count or 0) + 1
+    identity.counted = true
+
+    if data.count > 1 and data.breed_localization_key then
+        data.localization_key = data.breed_localization_key
+    end
 end
 
 local function _hexbound_boss_for_ritualist(ritualist_unit)
@@ -246,6 +257,8 @@ function Stats.record_boss_damage(boss_unit, aid, actual)
 end
 
 function Stats.finalize_boss_encounter(boss_unit)
+    _count_boss_kill(boss_unit)
+
     local damage_data = _boss_damage[boss_unit]
     if not damage_data then return nil end
 
@@ -376,6 +389,41 @@ for _, category in ipairs({ "lesser", "specials", "elites" }) do
         }
     end
 end
+
+-- Damage to the enemies each kill row counts, shown beside the kills when enabled in mod options.
+local KILL_DAMAGE_STAT_BY_KILL_STAT = {}
+local KILL_DAMAGE_STAT_BY_CATEGORY = {}
+
+local function _add_kill_damage_def(kill_stat_id, label)
+    local damage_stat_id = kill_stat_id .. "_damage"
+    KILL_DAMAGE_STAT_BY_KILL_STAT[kill_stat_id] = damage_stat_id
+    STAT_DEFS[#STAT_DEFS + 1] = {
+        id = damage_stat_id,
+        label = label,
+        cat = "combat",
+        dir = "asc",
+        accum = "add",
+        parent = kill_stat_id,
+        hidden = true,
+        ranked = false,
+        style = "sub",
+    }
+
+    return damage_stat_id
+end
+
+for _, category in ipairs({ "lesser", "specials", "elites" }) do
+    local kill_stat_id = category == "lesser" and "lesser_enemies_killed"
+        or category == "specials" and "specials_killed"
+        or "elites_killed"
+    KILL_DAMAGE_STAT_BY_CATEGORY[category] = _add_kill_damage_def(kill_stat_id, "row_" .. kill_stat_id)
+
+    for _, enemy in ipairs(EnemyCatalog[category]) do
+        _add_kill_damage_def(enemy.stat_id, enemy.label)
+    end
+end
+
+local _kill_damage_enabled = false
 
 local CATEGORIES = {
     { key = "combat",       label = "cat_combat"       },
@@ -531,7 +579,7 @@ local function _copy_boss_damage_by_type(source)
         end
 
         local count = data.count == nil and 1 or _safe_number(data.count)
-        if not count or count < 1 or count ~= math_floor(count) then
+        if not count or count < 0 or count ~= math_floor(count) then
             return nil
         end
 
@@ -925,6 +973,24 @@ function Stats.data_for(stat_id)
     return _data[stat_id]
 end
 
+function Stats.set_kill_damage_enabled(enabled)
+    _kill_damage_enabled = enabled == true
+end
+
+function Stats.kill_damage_values(stat_id)
+    local damage_stat_id = _kill_damage_enabled and KILL_DAMAGE_STAT_BY_KILL_STAT[stat_id]
+    if not damage_stat_id then
+        return nil
+    end
+
+    local values = {}
+    for aid, entry in pairs(_data[damage_stat_id]) do
+        values[aid] = entry.score or 0
+    end
+
+    return values
+end
+
 function Stats.hit_percentage_values(stat_id)
     local numerator_id = stat_id == "headshots" and "weakspot_ratio_hits"
         or stat_id == "critical_hits" and "critical_ratio_hits"
@@ -988,6 +1054,10 @@ function Stats.snapshot_sections(account_ids, sections)
             if percentage_values then
                 snapshot_row.percentage_values = {}
             end
+            local kill_damage_values = not row.values and Stats.kill_damage_values(row.id)
+            if kill_damage_values then
+                snapshot_row.damage_values = {}
+            end
 
             for aid in pairs(row.external and row.values or account_ids) do
                 local row_value = nil
@@ -1023,6 +1093,9 @@ function Stats.snapshot_sections(account_ids, sections)
                 end
                 if percentage_values then
                     snapshot_row.percentage_values[aid] = percentage_values[aid] or 0
+                end
+                if kill_damage_values then
+                    snapshot_row.damage_values[aid] = kill_damage_values[aid] or 0
                 end
             end
 
@@ -1236,6 +1309,12 @@ function Stats.handle_attack(aid, damage_profile, attacked_unit, hit_weakspot, d
         Stats.record("damage_to_bosses", aid, actual)
         Stats.record_boss_damage(attacked_unit, aid, actual)
         _record_boss_type_damage(attacked_unit, breed, aid, actual)
+    elseif _kill_damage_enabled and actual > 0 then
+        local enemy = ENEMY_BY_BREED[bn]
+        if enemy then
+            Stats.record(KILL_DAMAGE_STAT_BY_CATEGORY[enemy.category], aid, actual)
+            Stats.record(KILL_DAMAGE_STAT_BY_KILL_STAT[enemy.stat_id], aid, actual)
+        end
     end
 
     if attack_result == "died" then
