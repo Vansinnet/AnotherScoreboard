@@ -26,6 +26,14 @@ local bot_weapon_names = {
     bot_zola_laspistol = "Laspistol",
 }
 
+-- Game 1.13.0 stores profile talents as { tier = n, target_slot, node_name }; older builds store the tier.
+local function talent_tier(value)
+    if type(value) == "table" then
+        value = value.tier
+    end
+    return type(value) == "number" and value or nil
+end
+
 local function copy_links(links)
     local result = {}
     for i = 1, #(links or {}) do
@@ -195,8 +203,9 @@ local function capture_profile(profile)
     end
 
     local talent_ids = {}
-    for id, tier in pairs(selected_talents) do
-        if type(tier) == "number" and tier > 0 then
+    for id, value in pairs(selected_talents) do
+        local tier = talent_tier(value)
+        if tier and tier > 0 then
             talent_ids[#talent_ids + 1] = id
         end
     end
@@ -204,7 +213,7 @@ local function capture_profile(profile)
     local fallback_signature = { blitz = {}, aura = {}, ability = {} }
     for i = 1, #talent_ids do
         local id = talent_ids[i]
-        local tier = selected_talents[id]
+        local tier = talent_tier(selected_talents[id])
         local definition = talent_definitions[id]
         local points = points_by_talent[id] or tier
         snapshot.talents[i] = {

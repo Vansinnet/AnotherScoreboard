@@ -46,6 +46,7 @@ local BOSSES = {
     chaos_plague_ogryn = true, chaos_plague_ogryn_sprayer = true,
     renegade_captain = true, renegade_twin_captain = true, renegade_twin_captain_two = true,
     cultist_captain = true, chaos_mutator_daemonhost = true, chaos_ogryn_houndmaster = true,
+    chaos_daemonhost_torment = true, renegade_wizard = true,
 }
 
 local TWIN_BREEDS = {
@@ -73,6 +74,7 @@ local BOSS_BREED_LABELS = {
     cultist_captain = "row_boss_dreg_captain",
     chaos_mutator_daemonhost = "row_boss_hexbound_daemonhost",
     chaos_ogryn_houndmaster = "row_boss_ogryn_houndmaster",
+    renegade_wizard = "row_boss_prophet_of_decay",
 }
 
 local DOT_PROFILES = {
@@ -229,6 +231,11 @@ local function _hexbound_boss_for_ritualist(ritualist_unit)
 end
 
 function Stats.record_boss_damage(boss_unit, aid, actual)
+    local identity = _boss_identities[boss_unit]
+    if identity and identity.finalized then
+        return
+    end
+
     if not _boss_damage[boss_unit] then
         _boss_damage[boss_unit] = {}
         local hp_ext = ScriptUnit.has_extension(boss_unit, "health_system")
@@ -271,7 +278,11 @@ function Stats.finalize_boss_encounter(boss_unit)
 
     _boss_damage[boss_unit] = nil
     _boss_max_health[boss_unit] = nil
-    _boss_identities[boss_unit] = nil
+    -- Keep the identity: a death can be seen before the killing blow's attack report,
+    -- and a new identity for the same unit would count the boss twice.
+    if identity then
+        identity.finalized = true
+    end
 
     return {
         breed_name = breed_name,

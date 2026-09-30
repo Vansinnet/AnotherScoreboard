@@ -1058,6 +1058,9 @@ local localization = {
 	    en = "Pack Master",
 	    ["zh-cn"] = "猎群大师",
 	},
+	row_boss_prophet_of_decay = {
+	    en = "Prophet of Decay",
+	},
 	row_boss_twins = {
 	    en = "Twins",
 	    ["zh-cn"] = "双子",
