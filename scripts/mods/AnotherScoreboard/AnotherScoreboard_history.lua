@@ -831,7 +831,8 @@ function History.difficulty_display(metadata)
     local challenge = tonumber(metadata.challenge)
     local resistance = tonumber(metadata.resistance)
 
-    for _, danger in ipairs(DangerSettings) do
+    local danger_levels = DangerSettings.danger_levels or DangerSettings
+    for _, danger in ipairs(danger_levels) do
         if danger.challenge == challenge and danger.resistance == resistance then
             local ok, localized = pcall(Localize, danger.display_name)
             return ok and localized or danger.name

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Game update 1.13.0: Scoreboard History again shows Damnation and Auric instead of "Difficulty 5"; older history entries are fixed as well.
+- Game update 1.13.0: the new bosses from the Torment event (Daemonhost) and the Spillway missions now count as bosses. The Spillway boss is listed as Prophet of Decay on its boss damage row; the Torment Daemonhost uses its in-game name.
+- Fixed a boss sometimes being counted twice on its boss damage row, for example Prophet of Decay (2) after one kill, and a possible second Boss Popup. This happened when the game reported the death before the killing blow.
+- Game update 1.13.0: Squad Loadouts again lists the player's talents and fills Signature talents from them when the tree has no pick for a category. Saved scoreboards from before 1.13.0 for Cryptic, Ogryn, Psyker, Veteran and Zealot show that the talent tree has changed, because those trees were reworked.
+
 ## 2.0.0
 
 - The R hotkey is now "Damage Details". It still shows the DoT types and now also splits Other damage into Damage over time, Explosions, Arc lightning, Companion, Electrocution, and Unclassified. Scoreboards saved before this change have no Other damage breakdown.
