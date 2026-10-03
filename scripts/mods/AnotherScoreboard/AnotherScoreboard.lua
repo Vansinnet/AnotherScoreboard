@@ -94,6 +94,7 @@ local SCOREBOARD_STAT_CATALOG = mod:io_dofile("AnotherScoreboard/scripts/mods/An
 local THEME_CATALOG = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_themes")
 mod._forced_assist = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_forced_assist")
 mod._late_players = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_late_players")
+local _Sourceless = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_sourceless")
 
 local math_floor = math.floor
 local math_max   = math.max
@@ -137,7 +138,6 @@ local _aggro_baseline_pending = false
 local _aggro_sequence_order = 0
 local _aggro_diagnostics = {}
 local _unit_to_player = setmetatable({}, { __mode = "k" })
-local _recent_attack_by_unit = setmetatable({}, { __mode = "k" })
 
 local _boss_popup_queue = {}
 local _boss_popup_active = nil
@@ -293,13 +293,6 @@ local DEBUFF_GROUP_BY_KEYWORD = {
     electrocuted_shock_mine = "electrocuted",
     count_as_staggered = "count_as_staggered",
 }
-
-local CRYPTIC_SOURCELESS_DEBUFFS = {
-    cryptic_servo_skull_debuff = true,
-    flamer_assault = true,
-}
-
-local CRYPTIC_DEBUFF_ATTRIBUTION_WINDOW = 0.5
 
 local LIVE_STAT_SETTINGS = {
     "live_scoreboard_stat_1",
@@ -546,7 +539,7 @@ local function _clear_unit_runtime_caches()
     table_clear(mod.current_ammo)
     table_clear(mod.pending_ammo_pickups)
     table_clear(_unit_to_player)
-    table_clear(_recent_attack_by_unit)
+    _Sourceless.reset()
     table_clear(_enemy_aggro_targets)
 end
 
@@ -876,20 +869,6 @@ local function _player_archetype_name(player)
     local profile = player and player:profile()
 
     return profile and profile.archetype and profile.archetype.name or nil
-end
-
-local function _recent_cryptic_attacker_account_id(unit, template_name)
-    if not CRYPTIC_SOURCELESS_DEBUFFS[template_name] then
-        return nil
-    end
-
-    local record = _recent_attack_by_unit[unit]
-    local now = record and _gameplay_time()
-    if not now or now - record.time > CRYPTIC_DEBUFF_ATTRIBUTION_WINDOW then
-        return nil
-    end
-
-    return record.archetype_name == "cryptic" and record.account_id or nil
 end
 
 local function _buff_owner_unit(...)
@@ -2794,25 +2773,35 @@ local function _hook_minion_buff_extension(MinionBuffExtension)
         local group = _debuff_group_for_template(template, false)
         local was_active = group and _debuff_group_active(self, group)
             or template_name and self:has_buff_using_buff_template(template_name)
+        local sourceless = _Sourceless.is_sourceless(template_name)
+        local had_instance = sourceless and self:has_buff_using_buff_template(template_name)
         local index = func(self, template, t, from_server_correction, ...)
         local player = owner_unit and _player_from_unit(owner_unit)
         local aid = player and _account_id(player)
 
-        if not aid then
-            aid = _recent_cryptic_attacker_account_id(self._unit, template_name)
-        end
-
-        if not group and aid then
+        if not group and (aid or sourceless) then
             group = _debuff_group_for_template(template, true)
         end
 
-        if group and not was_active and index and aid and _Stats then
+        local counts_debuff = group and not was_active and index and true or false
+
+        if not aid and sourceless and index then
+            -- Attributed now or when the attacker's attack report arrives; see AnotherScoreboard_sourceless.
+            _Sourceless.on_debuff_added(self._unit, template_name, not had_instance, owner_unit == nil,
+                counts_debuff, _gameplay_time())
+        elseif counts_debuff and aid and _Stats then
             _Stats.record("debuffs_applied", aid, 1)
         end
 
         return index
     end)
 end
+
+_Sourceless.set_recorder(function(stat_id, aid, value)
+    if _Stats then
+        _Stats.record(stat_id, aid, value)
+    end
+end)
 
 local MINION_BUFF_EXTENSION_PATH = "scripts/extension_systems/buff/minion_buff_extension"
 mod:hook_require(MINION_BUFF_EXTENSION_PATH, _hook_minion_buff_extension)
@@ -2831,14 +2820,13 @@ function(func, self, damage_profile, attacked_unit, attacking_unit,
     local player = _player_from_unit(attacking_unit)
     local aid = player and _account_id(player)
     if attacked_unit and player then
-        local attack_time = _gameplay_time()
-        if attack_time then
-            _recent_attack_by_unit[attacked_unit] = {
-                account_id = aid,
-                archetype_name = _player_archetype_name(player),
-                time = attack_time,
-            }
-        end
+        _Sourceless.on_attack(attacked_unit, aid, _player_archetype_name(player), player, _gameplay_time())
+    end
+    -- Ticks of a debuff the game added without an owner have no attacker.
+    local sourceless_aid = not attacking_unit and attacked_unit and damage_profile
+        and _Sourceless.dot_owner(attacked_unit, damage_profile.name)
+    if sourceless_aid then
+        aid = sourceless_aid
     end
     if aid and _Stats then
         local boss_result = _Stats.handle_attack(aid, damage_profile, attacked_unit,
@@ -2853,7 +2841,7 @@ function(func, self, damage_profile, attacked_unit, attacking_unit,
             aid, attack_direction, hit_world_position)
     end
     -- Used if the death manager reports the kill before the attack report.
-    if attacked_unit and attacking_unit then
+    if attacked_unit and (attacking_unit or sourceless_aid) then
         mod._last_hitter_account_id[attacked_unit] = aid
     end
     return func(self, damage_profile, attacked_unit, attacking_unit,

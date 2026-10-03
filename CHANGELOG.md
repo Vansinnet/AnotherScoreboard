@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.2
+
+- Burn damage from the Zealot's Fire and Fury node now counts as Burning damage for the Zealot. The game adds that burn without a source player, so its damage was not counted for anyone and showed as 0. It now goes to the Zealot with Fire and Fury who last hit the enemy within half a second of the burn, and a kill by the burn counts for that Zealot. Applying the burn also counts toward Debuffs applied.
+- Debuffs that the game adds without a source player, such as the Skitarii servo skull's hack and burn, are now also credited when the game reports the debuff before the hit, not only after it. The hit that applied the debuff is still matched when another player hits the enemy in between.
+- Phosphor burn damage now counts as Burning damage. Before, it counted as Electrocution under Other damage.
+
 ## 2.0.1
 
 - The number after a boss name on its boss damage row, for example Daemonhost (2), now counts bosses killed. Before, a boss that was only hit also counted, such as a Daemonhost that was shot but left or was never killed. Damage to such a boss still shows on the row.

@@ -83,6 +83,7 @@ local DOT_PROFILES = {
     flame_grenade_liquid_area_fire_burning = "dot_burning_damage",
     liquid_area_fire_burning_barrel = "dot_burning_damage",
     liquid_area_fire_burning = "dot_burning_damage",
+    phosphor_burning = "dot_burning_damage",
     warpfire = "dot_soulblaze_damage",
     toxin_variant_1 = "dot_toxin_damage",
     toxin_variant_2 = "dot_toxin_damage",
