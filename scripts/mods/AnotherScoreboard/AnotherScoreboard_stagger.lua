@@ -1,3 +1,4 @@
+---@class AnotherScoreboardMod
 local mod = get_mod("AnotherScoreboard")
 
 local Stagger = mod:original_require("scripts/utilities/attack/stagger")

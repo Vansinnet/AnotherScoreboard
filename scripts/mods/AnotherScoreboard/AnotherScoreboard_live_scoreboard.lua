@@ -1,3 +1,4 @@
+---@type AnotherScoreboardMod
 local mod = get_mod("AnotherScoreboard")
 
 local UIWorkspaceSettings = require("scripts/settings/ui/ui_workspace_settings")

@@ -1,3 +1,4 @@
+---@type AnotherScoreboardMod
 local mod = get_mod("AnotherScoreboard")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
 
@@ -27,6 +28,7 @@ end
 
 function LoadoutRender.build(host, scenegraph_id, players, selected_player, show_tree, settings)
     local Render = mod:get_render()
+    ---@cast Render -nil
     Render.set_theme(settings and settings.scoreboard_theme)
     local C = Render.theme_colors()
     local text_scale = math.max(0.5, math.min(2, settings and settings.text_scale or 1))

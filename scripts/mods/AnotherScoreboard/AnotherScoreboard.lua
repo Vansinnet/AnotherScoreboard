@@ -107,9 +107,9 @@ mod._ammo_processed_units = setmetatable({}, { __mode = "k" })
 mod.current_ammo = setmetatable({}, { __mode = "k" })
 mod.pending_ammo_pickups = {}
 
-local _Stats         = nil
-local _Render        = nil
-local _History       = nil
+local _Stats         = nil ---@type table?
+local _Render        = nil ---@type table?
+local _History       = nil ---@type table?
 local _history_preload_done = false
 local _history_preload_delay = 1.0
 
@@ -401,6 +401,7 @@ local function _local_archetype_name()
     return LIVE_ARCHETYPES[archetype_name] and archetype_name or nil
 end
 
+---@return string
 local function _archetype_stat_key(archetype_id, index)
     local stat_key = mod:get(_archetype_stat_setting(archetype_id, index))
     return LIVE_STATS[stat_key] and stat_key or LIVE_STAT_DEFAULTS[index]
@@ -1108,6 +1109,7 @@ local function _credit_enemy_aggro(record, aid, reason)
     record.credited[aid] = true
     record.credited_count = record.credited_count + 1
     record.fallback = nil
+    ---@cast _Stats -nil
     _Stats.record("enemies_aggroed", aid, 1)
     _runtime_stat_revision = _runtime_stat_revision + 1
     _aggro_diagnostics.awarded_pairs = _aggro_diagnostics.awarded_pairs + 1
@@ -3140,6 +3142,7 @@ function(func, self, dt, t, ui_renderer, render_settings, input_service, ...)
             self._as_title_update_timer = 1.0
             local title_text = mod.get_scoreboard_title_text()
             self._as_title_widget.content.t = title_text
+            ---@cast _Render -nil
             _Render.fit_title_widget(self, ui_renderer, self._as_title_widget, title_text,
                 self._as_title_max_font_size, self._as_title_max_width)
         end
