@@ -3434,6 +3434,8 @@ function mod.on_all_mods_loaded()
             load_in_hub = true,
             package = {
                 "packages/ui/views/options_view/options_view",
+                -- Owns item_container_landscape_no_rarity, the weapon icon frame material.
+                "packages/ui/views/training_grounds_options_view/training_grounds_options_view",
                 "packages/ui/views/talent_builder_view/talent_builder_view",
                 "packages/ui/views/talent_builder_view/veteran",
                 "packages/ui/views/talent_builder_view/zealot",

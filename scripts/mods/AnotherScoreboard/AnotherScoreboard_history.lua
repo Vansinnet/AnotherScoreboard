@@ -1027,21 +1027,6 @@ function History.refresh_cache(rebuild_from_files)
     return cached_entries
 end
 
-function History.prune()
-    local path = ensure_directory()
-    if not path then
-        return
-    end
-
-    local files = sorted_history_files(path)
-    for i = History.recent_capacity() + 1, #files do
-        local file_path = files[i].file_path
-        if file_path and file_exists(file_path) then
-            _os.remove(file_path)
-        end
-    end
-end
-
 function History.clear()
     local path = appdata_path()
     local paths = {}
@@ -1353,7 +1338,6 @@ function History.save(snapshot)
     cached_entries = entries
     cached_capacity = capacity
     cache_ready = true
-    History.prune()
 
     return true, file_path
 end
