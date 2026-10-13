@@ -12,6 +12,7 @@ These are offline results with mocked engine natives, not in-game results.
 |---|---|---|
 | `boss_finalize_test.lua` | A boss killed once counts once and gives one popup, whether the death or the killing blow's attack report arrives first; the count is kills, so a boss that is only damaged or leaves adds no count but keeps its damage, and such a row survives export/import | 15 checks passed (2026-09-30); fails on the pre-fix `AnotherScoreboard_stats.lua` (check 9, damaged boss counted) |
 | `kill_damage_test.lua` | Damage beside enemy kills: off records nothing; on records category and enemy-type damage (survivors included, overkill capped, bosses and unknown breeds excluded); saved in history rows and rejoin data; older runs import | 19 checks passed (2026-09-30) |
+| `companion_damage_test.lua` | Skitarii servo skull shots and flamer hits (reported as ranged) and dog attacks count as Other damage > Companion and companion damage, not as ranged damage or melee/ranged hits; skull killing blows count as companion kills; the player's own hits are unchanged | 20 checks passed (2026-10-13); fails on the pre-fix `AnotherScoreboard_stats.lua` (check 2, skull shot counted as ranged) |
 | `external_stats_test.lua` | External stats API | 132 checks passed |
 | `external_integration_test.lua` | External provider integration | 36 checks passed |
 | `forced_assist_test.lua` | Forced assist detection | 9 checks passed |
