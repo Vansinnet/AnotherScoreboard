@@ -1,0 +1,221 @@
+[size=6][b]Another Scoreboard[/b][/size]
+Github: [url=https://github.com/Vansinnet/AnotherScoreboard]https://github.com/Vansinnet/AnotherScoreboard[/url]
+
+A detailed, performance-focused scoreboard for Darktide with in-mission stats, end-of-mission results, live tracking, boss damage summaries, squad loadouts and persistent mission history (allows you to save games and name them anything you want).
+
+Another Scoreboard gives you a clear picture of what happened during a mission without forcing you to wait for the end screen. Check the full scoreboard with Tab, monitor the stats that matter to you through the Live Stats HUD (configure it to show any value you want!), review boss damage as encounters end, and revisit previous missions from the Mourningstar or Psykanium.
+
+The interface includes player class icons, color-coded player columns, best/worst value highlighting, expandable stat breakdowns, and extensive layout controls.
+
+[size=5][b]Main Features[/b][/size]
+
+[size=4][b]Full Scoreboard During Missions[/b][/size]
+Hold [b]Tab[/b] to open Darktide's tactical overlay and see the full scoreboard while the mission is still in progress. Each player has a class icon and a color-coded column. Ranked rows highlight the best and worst values; lower values are correctly treated as better for statistics such as HP Lost, Downs & Deaths, and Disabled.
+
+The scoreboard tracks:
+[list]
+[*]Total, Special, Elite, ranged Elite, melee Elite, and companion kills
+[*]Total, melee, ranged, other, damage-over-time, companion, and boss damage
+[*]Bleeding, Soulblaze, Burning, and Toxin damage
+[*]Weakspot hits and ratio, critical hits and ratio, staggers, and debuffs
+[*]HP Lost, Downs & Deaths, Revives & Rescues, Disabled, and Disabled helped
+[*]Medicae uses, ammo pickups, ammo gained, ability uses, aggro, and coherency
+[/list]
+Accumulated statistics stay with a player's account if they disconnect and rejoin during the same mission. Your own active-run stats also survive a local reconnect, a hot reload, or disabling the mod mid-mission.
+
+[size=4][b]Expandable Detail Rows[/b][/size]
+Use the full scoreboard without permanently filling it with every breakdown:
+[list]
+[*][b]E:[/b] Special and Elite kill details
+[*][b]R:[/b] Damage details: Damage per second and Other Damage split by source (damage over time, explosions, arc lightning, companion, electrocution, unclassified)
+[*][b]T:[/b] Boss-type damage details
+[*][b]Y:[/b] Survival details, including Downs, Deaths, ability-use rate, and average time between uses
+[/list]
+Only one built-in detail group is expanded at a time. The enemy breakdown covers Pox Hounds, Mutants, Trappers, Poxbursters, Bombers, Snipers, Flamers, Ragers, Maulers, Bulwarks, Crushers, Gunners, Shotgunners, Reapers, and Plasma Gunners.
+
+Boss details cover Beast of Nurgle, Daemonhost, Chaos Spawn, Plague Ogryn, Captains, Twins, Hexbound Daemonhost, and Pack Master encounters when present.
+
+[b]New: damage beside enemy kills[/b] (optional, off by default). Show kills as [i]kills (damage)[/i] for Lesser Enemies, Specials, Elites, or individual enemy types, so you can see who actually worked on those enemies even if someone else landed the killing blow.
+
+[size=4][b]End-of-Mission Scoreboard[/b][/size]
+AnotherScoreboard can automatically open when the mission ends. It has independent scale, opacity, and position settings, so a large end-screen result does not change the in-mission Tab layout. The same detail controls are available on the end screen.
+
+Players who leave within 30 seconds of the confirmed mission outcome remain in the final scoreboard and history with a [b]Left near match end[/b] label. If someone left earlier and the squad finished with a bot, the bot keeps that slot and is labeled [b]Bot[/b]. A current human replacement or reconnected player always takes priority.
+
+[size=4][b]Configurable Live Stats HUD[/b][/size]
+The Live Stats HUD shows all human players and one to three selected statistics while you play. It is designed for quick comparisons without opening the full scoreboard.
+[list]
+[*]Choose from 40 supported statistics, including damage, DPS, kills, survival, accuracy, boss damage, DoT, explosion, arc and electrocution damage, ammo, ability, aggro, and coherency values
+[*]The first Live Stat controls player sorting
+[*]Lower-is-better statistics sort in the correct direction
+[*]Duplicate selections swap columns instead of producing repeated values
+[*]Save separate Live Stats choices for each player class
+[*]Adjust scale, position, and background opacity
+[*]Long player names are shortened with "..." to fit on one line
+[/list]
+
+[size=4][b]Boss Damage Popup[/b][/size]
+When a tracked boss dies, a compact popup summarizes each player's contribution to that encounter.
+[list]
+[*]Player names and class icons
+[*]Damage values and percentage share of tracked player damage
+[*]Optional total damage
+[*]Up to four players, sorted by damage
+[*]Multiple boss deaths are queued and shown in sequence
+[/list]
+Damage, percentage, total, scale, duration, position, and background opacity are individually configurable. Changing presentation settings also shows a preview.
+
+[size=4][b]Persistent Scoreboard History[/b][/size]
+AnotherScoreboard saves completed missions that reach the ending screen. [b]Recent history capacity[/b] (next to the history keybind in Mod Options) keeps 10 to 100 missions in steps of 10 (default: 10).
+
+Open Scoreboard History with [b]F5[/b] by default while in the Mourningstar or Psykanium. The keybind can be changed in Mod Options. Use the mouse wheel to scroll Recent or Saved; each tab remembers its own position while history is open.
+
+History entries include mission, game type, difficulty, completion time and date, players, outcome, mission conditions, Havoc rank and modifiers, and the complete recorded scoreboard. History recognizes standard missions, Auric and Maelstrom missions, Havoc, Expeditions, and Mortis Trials.
+
+Copy a Recent mission to the separate, unlimited [b]Saved[/b] collection to keep it permanently. Saved missions can have custom names, can be renamed later, and can be removed individually. Clearing Recent history or lowering its capacity does not remove Saved missions.
+
+Click the Social icon beside a player in Scoreboard History to open Darktide's native Social menu with that player's popup. Bots and entries without a valid account have no Social action.
+
+History files are stored locally under:
+[code]%APPDATA%\Fatshark\Darktide\AnotherScoreboard_history\[/code]
+A lower capacity does not delete extra Recent files immediately; they are pruned on the next completed mission save. Raising the limit cannot restore missions already deleted.
+
+[size=4][b]Squad Loadouts and Talent Trees[/b][/size]
+On an end-of-mission or history scoreboard, press [b]U[/b] to open Squad Loadouts. Player tabs at the top show each player's number key, class icon, and name. The view is split into [b]Weapons[/b], [b]Curios[/b], and [b]Signature Talents[/b].
+[list]
+[*][b]Weapons:[/b] the weapon's model rendered by the game, base stats as bars, and perks and blessings with tier markers. Hover a weapon for full perk and blessing descriptions. Saved mission scoreboards preload thumbnails before you open the view.
+[*][b]Curios:[/b] three cards with each curio's main Health, Toughness, Stamina, or Wounds bonus. Hover for additional perks.
+[*][b]Signature Talents:[/b] hover for the description; long descriptions can be paged with the mouse wheel.
+[/list]
+Press [b]T[/b], or click the view switch at the top right, to show that player's full talent tree using the game's native node, connection, icon, and tooltip styling. Use the mouse wheel to zoom, left-drag to pan, and hover a node for details. Press [b]1-4[/b], click a player card, or use the wheel in the loadout view to change player. This view is read-only: it cannot spend or remove talent points.
+
+Talent trees come from the saved mission build. If the current game tree no longer matches the saved layout or selections, AnotherScoreboard displays a notice instead of an inaccurate tree. Weapon thumbnails need missions recorded with v1.2.5 or later and curios need v1.2.7 or later; older entries still show their saved details.
+
+[size=4][b]External Provider Stats[/b][/size]
+Other mods can add local-only, collapsible stat groups to the full scoreboard. External rows can show numeric or text values, can appear under a built-in category or their own category, and are retained in mission history even if the provider mod is later disabled or removed.
+
+In the Tab scoreboard, the configurable [b]External stat details[/b] key defaults to [b]J[/b] and toggles all collapsible external groups. End screens and history use clickable group headings. This does not affect the compact Live Stats HUD.
+
+Mod authors should use the [url=https://github.com/Vansinnet/AnotherScoreboard/blob/main/EXTERNAL_STATS_API.md]External Stats API v1 documentation[/url] for registration, values, lifecycle rules, and examples.
+
+[size=5][b]Mod Options[/b][/size]
+Settings are organized by feature:
+[list]
+[*][b]Scoreboard Appearance:[/b] theme, text scale, local-player-first ordering, and row shading
+[*][b]In-Mission Scoreboard (Tab):[/b] enable, scale, opacity, and position
+[*][b]End-of-Mission Scoreboard:[/b] automatic display, scale, opacity, and position
+[*][b]Live Stats HUD:[/b] enable, class-specific columns, scale, position, and background opacity
+[*][b]Boss Damage Popup:[/b] enable, displayed columns, scale, duration, position, and background opacity
+[*][b]Toggle Stats in Scoreboard:[/b] visibility of individual built-in combat and survival rows, and "Show damage beside enemy kills" (off by default)
+[*][b]Keybinds:[/b] Scoreboard History (with Recent history capacity) and External stat details
+[/list]
+Hiding a built-in row affects only its display. The mod continues to track and save that statistic. The exception is damage beside enemy kills, which is recorded only while that option is on.
+
+[size=5][b]Controls[/b][/size]
+[list]
+[*][b]Tab[/b] - Open the in-mission tactical overlay scoreboard
+[*][b]E[/b] - Show or hide Special and Elite kill details
+[*][b]R[/b] - Show or hide damage details
+[*][b]T[/b] - Show or hide boss-type damage details; toggle the talent tree in Squad Loadouts
+[*][b]Y[/b] - Show or hide survival details
+[*][b]U[/b] - Open or close Squad Loadouts on end-of-mission and history scoreboards
+[*][b]J[/b] - Toggle collapsible external stat groups while Tab is held (configurable)
+[*][b]F5[/b] - Open Scoreboard History in the Mourningstar or Psykanium (configurable)
+[*][b]Q[/b] - Hide or show the end-of-mission scoreboard
+[*][b]Esc[/b] - Close history or return from Squad Loadouts
+[*][b]Space[/b] - Clear the Recent history list
+[*][b]Mouse wheel[/b] - Scroll Recent or Saved history; change loadout player; zoom/paginate in the talent-tree view
+[/list]
+
+[size=5][b]Requirements[/b][/size]
+[list]
+[*]Warhammer 40,000: Darktide
+[*]Darktide Mod Framework (DMF)
+[/list]
+No other mod is required. Havoc modifier colors used by Scoreboard History are included directly in AnotherScoreboard.
+
+[size=5][b]Important Notes[/b][/size]
+[list]
+[*]Statistics are collected client-side from events visible to the mod. They are not official Fatshark or server-authoritative statistics.
+[*]Live Stats shows human players and supports Darktide's four-player team size.
+[*]Scoreboard History is available from the Mourningstar or Psykanium, not during a regular mission.
+[*]Recent history keeps 10-100 missions (default: 10). The unlimited Saved collection is not cleared with Recent history.
+[*]User-facing text is available in English and Simplified Chinese.
+[/list]
+
+[size=5][b]How Statistics Are Calculated[/b][/size]
+The formulas below are simplified. A [i]count[/i] is the number of matching events detected by the mod; a [i]sum[/i] adds all matching values.
+
+[size=4][b]Damage[/b][/size]
+AnotherScoreboard uses actual enemy health removed rather than unlimited reported hit damage:
+[code]Actual damage for a hit = minimum(reported damage, enemy health remaining)
+Total damage = sum of actual damage from all hits[/code]
+This limits overkill damage when the final hit is larger than the enemy's remaining health.
+[list]
+[*][b]Total Damage / Live Damage:[/b] sum of actual damage credited to the player
+[*][b]Melee Damage:[/b] sum of actual damage from attacks classified as melee
+[*][b]Ranged Damage:[/b] sum of actual damage from attacks classified as ranged
+[*][b]Other Damage:[/b] Total Damage minus Melee Damage minus Ranged Damage
+[*][b]Damage per Second (R / Live Stats):[/b] Total Damage / mission time in seconds (the same time as Mission time in the scoreboard title)
+[*][b]Other Damage details (R):[/b] Other Damage split by source: Damage over time (recognized DoT profiles), Explosions, Arc lightning, Companion, Electrocution (shock and stun ticks), and Unclassified (for example shouts and pushes). The rows add up to Other Damage
+[*][b]Damage over Time:[/b] sum of actual damage from recognized DoT profiles
+[*][b]Bleeding / Soulblaze / Burning / Toxin:[/b] sum of matching DoT damage
+[*][b]Companion Damage (Live Stats only):[/b] sum of actual damage caused by the player's companion attacks, including the Skitarii servo skull
+[*][b]Boss Damage:[/b] sum of actual damage dealt to tracked bosses
+[*][b]Boss Type Damage:[/b] Boss Damage grouped by individual boss type or encounter
+[*][b]Boss Popup Percentage:[/b] Player Boss Damage / Total Tracked Player Boss Damage x 100
+[/list]
+DoT and boss damage are detail categories inside Total Damage. Do not add them to Total Damage a second time.
+
+[size=4][b]Kills[/b][/size]
+[list]
+[*][b]Total Kills:[/b] count of enemies where the player or attributed attack delivered the killing blow
+[*][b]Specials Killed:[/b] count of Total Kills classified as Specials
+[*][b]Elites Killed:[/b] count of Total Kills classified as Elites
+[*][b]Ranged Elites / Melee Elites:[/b] Elite kills grouped by ranged or melee breed
+[*][b]Individual Enemy Kills:[/b] Special or Elite kills grouped by enemy breed
+[*][b]Companion Kills:[/b] count of killing blows caused by the player's companion attacks
+[*][b]Damage beside kills (optional):[/b] damage the player dealt to Lesser Enemies, Specials, Elites, or one enemy type, shown as kills (damage). It counts all damage to those enemies, including enemies that survived or that another player killed, and excludes overkill like Total Damage
+[/list]
+The same defeated enemy is deduplicated so separate damage and death reports do not count it twice.
+
+[size=4][b]Accuracy and Utility[/b][/size]
+[list]
+[*][b]Weakspot Hits:[/b] count of attacks reported as hitting a weakspot
+[*][b]Weakspot Hit Ratio:[/b] weakspot melee/ranged hits / all valid melee/ranged hits x 100
+[*][b]Critical Hits:[/b] count of critical attacks that dealt more than zero damage
+[*][b]Critical Hit Ratio:[/b] critical melee/ranged hits / all valid melee/ranged hits x 100
+[*][b]Enemies Staggered:[/b] count of qualifying stagger events credited to the player
+[*][b]Debuffs Applied:[/b] count of newly activated tracked debuff groups applied to enemies
+[/list]
+An enemy can contribute more than one stagger if it is staggered by multiple qualifying attacks.
+
+[size=4][b]Survival[/b][/size]
+[list]
+[*][b]HP Lost:[/b] sum of positive increases in the player's accumulated health damage
+[*][b]Downs & Deaths:[/b] number of transitions into knocked-down or dead states
+[*][b]Revives & Rescues:[/b] count of successful revives and rescues credited to the player, including revives by the player's Skitarii medicae servo skull and by a Veteran shout with the revive talent
+[*][b]Disabled:[/b] number of new disabling states such as nets, pounces, grabs, or being consumed
+[*][b]Disabled Helped:[/b] count of credited assists that free a disabled teammate, including net releases by the player's Skitarii servo skull
+[*][b]Medicae Uses:[/b] count of successful health-station interactions
+[/list]
+Healing does not subtract from HP Lost. Lower values are treated as better for HP Lost, Downs & Deaths, Disabled, and Medicae Uses.
+
+[size=4][b]Ammo, Abilities, Aggro, and Coherency[/b][/size]
+[list]
+[*][b]Ammo Pickups:[/b] count of recognized ammo pickups collected
+[*][b]Ammo Gained:[/b] sum of positive magazine plus reserve-ammo changes after pickups
+[*][b]Ability Uses:[/b] count of detected decreases in combat-ability charges
+[*][b]Enemies Aggroed:[/b] count of unique enemy-to-player aggro credits detected during target sequences
+[*][b]Coherency:[/b] time near at least one teammate / eligible alive time x 100
+[/list]
+Ammo Pickups measures how many pickups were taken, while Ammo Gained estimates how much ammunition they restored. An enemy can credit more than one player if it clearly switches targets during its lifetime, but is counted at most once per player. Dead or hogtied time is excluded from Coherency eligible time.
+
+[size=4][b]Display and Ranking[/b][/size]
+[list]
+[*]Counts display as whole numbers.
+[*]Large damage values use K or M where needed.
+[*]Ratios and coherency display as rounded whole percentages.
+[*]Green, with a marker behind the value, marks the best value and red marks the worst value on ranked rows.
+[*]For negative statistics such as HP Lost and Disabled, the lowest value is ranked best.
+[/list]
