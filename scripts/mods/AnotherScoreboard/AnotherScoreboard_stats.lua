@@ -1232,7 +1232,10 @@ function Stats.handle_attack(aid, damage_profile, attacked_unit, hit_weakspot, d
         return
     end
 
-    local melee_or_ranged = attack_type == "melee" or attack_type == "ranged"
+    -- The servo skull's shots and flames are reported as ranged; they count as companion
+    -- damage, not as the player's own ranged hits.
+    local companion_attack = is_companion_attack(damage_profile, attack_type)
+    local melee_or_ranged = not companion_attack and (attack_type == "melee" or attack_type == "ranged")
     if melee_or_ranged and not NON_HIT_ATTACK_RESULTS[attack_result] then
         Stats.record("melee_ranged_hits", aid, 1)
         if hit_weakspot then
@@ -1276,12 +1279,11 @@ function Stats.handle_attack(aid, damage_profile, attacked_unit, hit_weakspot, d
     total_dmg[aid] = td_entry
 
     local boss_result = nil
-    local companion_attack = is_companion_attack(damage_profile, attack_type)
     local dot_stat_id = damage_profile and DOT_PROFILES[damage_profile.name]
     Stats.record("damage_dealt", aid, actual)
-    if attack_type == "ranged" then
+    if melee_or_ranged and attack_type == "ranged" then
         Stats.record("ranged_damage", aid, actual)
-    elseif attack_type == "melee" then
+    elseif melee_or_ranged then
         Stats.record("melee_damage", aid, actual)
     else
         Stats.record("other_damage", aid, actual)

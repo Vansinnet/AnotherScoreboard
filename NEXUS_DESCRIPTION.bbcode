@@ -154,10 +154,10 @@ This limits overkill damage when the final hit is larger than the enemy's remain
 [list]
 [*][b]Total Damage / Live Damage:[/b] sum of actual damage credited to the player
 [*][b]Melee Damage:[/b] sum of actual damage from attacks classified as melee
-[*][b]Ranged Damage:[/b] sum of actual damage from attacks classified as ranged
+[*][b]Ranged Damage:[/b] sum of actual damage from attacks classified as ranged, excluding companion attacks
 [*][b]Other Damage:[/b] Total Damage minus Melee Damage minus Ranged Damage
 [*][b]Damage per Second (R / Live Stats):[/b] Total Damage / mission time in seconds (the same time as Mission time in the scoreboard title)
-[*][b]Other Damage details (R):[/b] Other Damage split by source: Damage over time (recognized DoT profiles), Explosions, Arc lightning, Companion, Electrocution (shock and stun ticks), and Unclassified (for example shouts and pushes). The rows add up to Other Damage
+[*][b]Other Damage details (R):[/b] Other Damage split by source: Damage over time (recognized DoT profiles), Explosions, Arc lightning, Companion (including the Skitarii servo skull's shots and flames), Electrocution (shock and stun ticks), and Unclassified (for example shouts and pushes). The rows add up to Other Damage
 [*][b]Damage over Time:[/b] sum of actual damage from recognized DoT profiles
 [*][b]Bleeding / Soulblaze / Burning / Toxin:[/b] sum of matching DoT damage
 [*][b]Companion Damage (Live Stats only):[/b] sum of actual damage caused by the player's companion attacks, including the Skitarii servo skull
@@ -182,9 +182,9 @@ The same defeated enemy is deduplicated so separate damage and death reports do 
 [size=4][b]Accuracy and Utility[/b][/size]
 [list]
 [*][b]Weakspot Hits:[/b] count of attacks reported as hitting a weakspot
-[*][b]Weakspot Hit Ratio:[/b] weakspot melee/ranged hits / all valid melee/ranged hits x 100
+[*][b]Weakspot Hit Ratio:[/b] weakspot melee/ranged hits / all valid melee/ranged hits x 100 (companion attacks excluded)
 [*][b]Critical Hits:[/b] count of critical attacks that dealt more than zero damage
-[*][b]Critical Hit Ratio:[/b] critical melee/ranged hits / all valid melee/ranged hits x 100
+[*][b]Critical Hit Ratio:[/b] critical melee/ranged hits / all valid melee/ranged hits x 100 (companion attacks excluded)
 [*][b]Enemies Staggered:[/b] count of qualifying stagger events credited to the player
 [*][b]Debuffs Applied:[/b] count of newly activated tracked debuff groups applied to enemies
 [/list]
