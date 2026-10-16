@@ -1360,6 +1360,7 @@ function History.player_adapters(players)
             string_symbol = player.archetype_icon or player.string_symbol,
             loadout_snapshot = player.loadout_snapshot,
             social_account_id = social_account_id,
+            rainbow_name = player.rainbow_name,
             account_id = function(self)
                 return self._account_id
             end,

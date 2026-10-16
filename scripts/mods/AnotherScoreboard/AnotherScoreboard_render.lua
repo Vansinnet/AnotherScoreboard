@@ -270,6 +270,26 @@ local function _combined_panel_layout(sections, settings)
     }
 end
 
+local RAINBOW_COLORS = {
+    { 255, 110, 110 }, { 255, 180, 90 }, { 250, 235, 110 }, { 130, 235, 130 },
+    { 110, 200, 255 }, { 170, 140, 255 }, { 240, 130, 230 },
+}
+
+-- Each UTF-8 character in the next colour, with the game's inline colour markup
+-- (utilities/ui/text.lua:8-10); braces are dropped so a name cannot add markup.
+local function _rainbow_text(text)
+    local parts = {}
+
+    for char in string.gmatch(text, "[%z\1-\127\194-\244][\128-\191]*") do
+        if char ~= "{" and char ~= "}" then
+            local color = RAINBOW_COLORS[#parts % #RAINBOW_COLORS + 1]
+            parts[#parts + 1] = string_format("{#color(%d,%d,%d)}%s{#reset()}", color[1], color[2], color[3], char)
+        end
+    end
+
+    return table.concat(parts)
+end
+
 local function _player_name(player, aid, index, max_len)
     local real = aid and aid ~= ""
     local name = real and player:name()
@@ -480,6 +500,9 @@ local function _add_player_header_passes(passes, players, ids, layout, ox, heade
         local player_name = _player_name(players[pi], aid, pi, name_len)
         local name_font_size = _fit_label_font_size(host, ui_renderer, player_name, "proxima_nova_bold",
             math_max(_dim.name_font, 9), col_w - _scaled(8), name_h)
+        if mod.has_rainbow_name(players[pi]) then
+            player_name = _rainbow_text(player_name)
+        end
         passes[#passes + 1] = _txt("player_" .. pi, player_name, col_x, name_y, BASE_Z + 8,
             col_w, name_h, "proxima_nova_bold", name_font_size, "center", "center", C.normal)
 

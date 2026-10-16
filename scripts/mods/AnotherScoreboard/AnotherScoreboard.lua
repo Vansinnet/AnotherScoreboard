@@ -741,6 +741,40 @@ local function _account_id(player)
     return player:account_id() or player:name()
 end
 
+-- A player whose Steam name is this (lower case) gets a rainbow name in the scoreboard header.
+local RAINBOW_STEAM_NAME = "gabe"
+-- account_id -> true once matched; an account id never changes its owner.
+local _rainbow_name_accounts = {}
+
+-- Live players are checked by the Steam persona name the game shows, without the platform icon
+-- (player_info.lua:81-106); saved scoreboards carry the result in rainbow_name.
+function mod.has_rainbow_name(player)
+    if type(player.is_human_controlled) ~= "function" then
+        return player.rainbow_name == true
+    end
+
+    local account_id = player:is_human_controlled() and player:account_id()
+    if not account_id then
+        return false
+    end
+
+    if _rainbow_name_accounts[account_id] then
+        return true
+    end
+
+    local data_service = Managers.data_service
+    local social = data_service and data_service.social
+    local player_info = social and social:get_player_info_by_account_id(account_id)
+    local name = player_info and player_info:user_display_name(false, true)
+
+    if type(name) == "string" and string.lower(name) == RAINBOW_STEAM_NAME then
+        _rainbow_name_accounts[account_id] = true
+        return true
+    end
+
+    return false
+end
+
 -- Most attacked units are minions; skip the player lookup's roster scan for them.
 local function _attacked_player(unit)
     local unit_data = unit and ScriptUnit.has_extension(unit, "unit_data_system")
@@ -2139,6 +2173,7 @@ local function _history_players()
                 archetype_icon = archetype_name and UISettings.archetype_font_icon[archetype_name],
                 loadout_snapshot = mod._loadout and mod._loadout.capture(profile),
                 social_account_id = mod._social and mod._social.account_id_for_player(player) or nil,
+                rainbow_name = mod.has_rainbow_name(player) or nil,
             }
         end
     end
@@ -2180,6 +2215,7 @@ local function _player_snapshot(player)
         is_human = player:is_human_controlled(),
         loadout_snapshot = mod._loadout and mod._loadout.capture(profile),
         social_account_id = mod._social and mod._social.account_id_for_player(player) or nil,
+        rainbow_name = mod.has_rainbow_name(player) or nil,
     }
 end
 
