@@ -380,7 +380,18 @@ local _settings = {
     scoreboard_theme = THEME_CATALOG.default,
     show_weakspot_percentage = true,
     show_critical_percentage = true,
+    exact_damage_numbers = false,
 }
+
+-- Large values as K/M, or as whole numbers when exact damage numbers are on.
+function mod.format_amount(value)
+    if not _settings.exact_damage_numbers then
+        if value >= 1e6 then return string.format("%.1fM", value * 1e-6) end
+        if value >= 1e3 then return string.format("%.1fK", value * 1e-3) end
+    end
+
+    return string.format("%.0f", value)
+end
 
 local SCOREBOARD_STAT_SETTING_BY_ID = {}
 for i = 1, #SCOREBOARD_STAT_CATALOG do
@@ -603,6 +614,7 @@ local function _refresh_settings()
     _settings.text_scale        = (mod:get("scoreboard_text_scale") or 115) * 0.01
     _settings.local_player_first = mod:get("local_player_first") == true
     _settings.alternating_row_shading = mod:get("alternating_row_shading") ~= false
+    _settings.exact_damage_numbers = mod:get("exact_damage_numbers") == true
     _settings.scoreboard_opacity = mod:get("scoreboard_opacity") or 206
     _settings.vertical_offset   = mod:get("vertical_offset") or 0
     _settings.horizontal_offset = mod:get("horizontal_offset") or 0
@@ -3562,7 +3574,8 @@ function mod.on_setting_changed(setting_id)
     if setting_id == "scoreboard_theme"
         or setting_id == "scoreboard_text_scale"
         or setting_id == "local_player_first"
-        or setting_id == "alternating_row_shading" then
+        or setting_id == "alternating_row_shading"
+        or setting_id == "exact_damage_numbers" then
         _runtime_stat_revision = _runtime_stat_revision + 1
 
         local ui = Managers.ui

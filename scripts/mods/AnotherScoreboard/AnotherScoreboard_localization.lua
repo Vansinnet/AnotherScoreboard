@@ -287,6 +287,12 @@ local localization = {
 	    en = "Use fixed shading for headings and alternating shading for detail rows in full scoreboards.",
 	    ["zh-cn"] = "完整记分板的标题使用固定底色，详情行使用交替底色。",
 	},
+	exact_damage_numbers = {
+	    en = "Exact Damage Numbers",
+	},
+	exact_damage_numbers_tooltip = {
+	    en = "Show damage and other large values as whole numbers, for example 123456 instead of 123.5K, in the scoreboards, Live Stats and the boss damage popup.",
+	},
 	scoreboard_opacity = {
 	    en = "Opacity",
 	    ["zh-cn"] = "不透明度",

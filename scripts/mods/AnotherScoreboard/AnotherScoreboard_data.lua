@@ -125,6 +125,8 @@ return {
                   title = "local_player_first", tooltip = "local_player_first_tooltip" },
                 { setting_id = "alternating_row_shading", type = "checkbox", default_value = true,
                   title = "alternating_row_shading", tooltip = "alternating_row_shading_tooltip" },
+                { setting_id = "exact_damage_numbers", type = "checkbox", default_value = false,
+                  title = "exact_damage_numbers", tooltip = "exact_damage_numbers_tooltip" },
            },
         },
         { setting_id = "tab_scoreboard_header", type = "group",

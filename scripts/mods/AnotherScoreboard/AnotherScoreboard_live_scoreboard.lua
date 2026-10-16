@@ -234,16 +234,6 @@ local widget_definitions = {
 
 local HudElementLiveScoreboard = class("HudElementLiveScoreboard", "HudElementBase")
 
-local function shorten(v)
-    if v >= 1000000 then
-        return string_format("%.1fM", v * 0.000001)
-    elseif v >= 1000 then
-        return string_format("%.1fK", v * 0.001)
-    end
-
-    return string_format("%d", math_floor(v + 0.5))
-end
-
 local function format_value(value, format)
     if format == "percent" then
         return string_format("%d%%", math_floor(value + 0.5))
@@ -251,7 +241,7 @@ local function format_value(value, format)
         return string_format("%d", math_floor(value + 0.5))
     end
 
-    return shorten(value)
+    return mod.format_amount(value)
 end
 
 local function short_name(name)
