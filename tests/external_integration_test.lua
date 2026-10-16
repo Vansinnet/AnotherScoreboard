@@ -79,6 +79,11 @@ visibility.headshots, visibility.critical_hits, visibility.enemies_staggered, vi
 local sections = mod.filter_scoreboard_sections(mod.get_stats().sections())
 eq(find(sections, "combat_utility") ~= nil, true)
 eq(find(sections, key) ~= nil, true)
+-- A saved run from before the Fun Facts rows used the detail size and Ranged misses was removed.
+local saved_fun_facts = mod.filter_scoreboard_sections({ { category = { key = "fun_facts", label = "cat_fun_facts" },
+    rows = { { id = "hits_taken", style = "main", values = {} }, { id = "ranged_misses", style = "main", values = {} } } } })
+eq(find(saved_fun_facts, "hits_taken").style, "sub")
+eq(find(saved_fun_facts, "ranged_misses"), nil)
 local calls = 0
 assert(mod:set_external_stat_collector(owner, function(_, api)
     calls = calls + 1

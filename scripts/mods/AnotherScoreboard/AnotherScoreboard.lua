@@ -1860,8 +1860,13 @@ local function _filter_scoreboard_sections(sections, show_all_enemy_rows, show_a
                     or row.id == "elite_radio_operator_killed"
                     or row.id == "dot_electrocution_damage"
                     or row.id == "companion_damage"
+                    or row.id == "ranged_misses"
 
                 if not removed_row and row_visible and not _is_effectiveness_row(row) then
+                    if section_key == "fun_facts" then
+                        -- Runs saved while the Fun Facts rows used the heading size.
+                        row.style = "sub"
+                    end
                     _configure_hit_percentage(row)
                     mod._configure_kill_damage(row)
                     if section_key == "performance" then
