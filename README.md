@@ -251,7 +251,7 @@ Lower values are treated as better for Hits that cost HP and Teammates hurt.
 ### Display and Ranking
 
 - Counts display as whole numbers.
-- Large damage values use `K` or `M` where needed, or whole numbers with Exact Damage Numbers on (scoreboards, Live Stats and the boss popup).
+- Large damage values use `K` or `M` where needed, or whole numbers grouped by spaces (1 032 234) with Exact Damage Numbers on (scoreboards, Live Stats and the boss popup).
 - Ratios and coherency display as rounded whole percentages.
 - Green, with a marker behind the value, marks the best value and red marks the worst value on ranked rows.
 - For negative statistics such as HP Lost and Disabled, the lowest value is ranked best.
