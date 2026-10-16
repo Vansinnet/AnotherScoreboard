@@ -48,7 +48,7 @@ Players who leave within 30 seconds of the confirmed mission outcome remain in t
 
 The Live Stats HUD shows all human players and one to three selected statistics while you play. It is designed for quick comparisons without opening the full scoreboard.
 
-- Choose from 44 supported statistics, including damage, kills, survival, accuracy, boss damage, DoT, explosion, arc and electrocution damage, ammo, ability, aggro, coherency, and Fun Facts values (Ranged Misses shows `--` for other players)
+- Choose from 43 supported statistics, including damage, kills, survival, accuracy, boss damage, DoT, explosion, arc and electrocution damage, ammo, ability, aggro, coherency, and Fun Facts values
 - The first Live Stat controls player sorting
 - Lower-is-better statistics sort in the correct direction
 - Duplicate selections swap columns instead of producing repeated values
@@ -244,10 +244,9 @@ Ammo Pickups measures how many pickups were taken, while Ammo Gained estimates h
 | --- | --- |
 | Hits that cost HP | Count of direct hits on the player that took health or corruption; hits only on toughness, and damage-over-time or area ticks such as fire and gas, are not counted |
 | Highest single hit | The player's largest melee or ranged hit on one enemy, overkill included (companion attacks excluded) |
-| Ranged misses | Shots from hitscan and shotgun weapons that hit no enemy; projectile weapons and flamers are not counted. Shown only for you: the game simulates only your own shots, so other players show `--` |
 | Teammates hurt | Count of direct hits that cost another player health or toughness, such as a barrel the player shot or a Poxburster the player pushed or killed |
 
-Lower values are treated as better for Hits that cost HP and Teammates hurt. Ranged misses is not ranked.
+Lower values are treated as better for Hits that cost HP and Teammates hurt.
 
 ### Display and Ranking
 

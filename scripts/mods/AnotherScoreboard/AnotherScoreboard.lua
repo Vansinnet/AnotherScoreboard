@@ -1957,13 +1957,12 @@ function mod.get_live_scoreboard_rows()
 
         for i = 1, _settings.live_scoreboard_stat_count do
             local stat = LIVE_STATS[_settings.live_scoreboard_stats[i]]
-            local value = 0 ---@type number?
+            local value = 0
 
             if stat.stat_id then
                 local data = _Stats.data_for(stat.stat_id)
                 local entry = data and data[aid]
-                -- An optional stat has no value for a player it cannot track; the HUD shows "--".
-                value = entry and entry.score or not stat.optional and 0 or nil
+                value = entry and entry.score or 0
             elseif stat.per_second_stat_id then
                 local data = _Stats.data_for(stat.per_second_stat_id)
                 local entry = data and data[aid]
@@ -2876,21 +2875,6 @@ function(func, self, damage_profile, attacked_unit, attacking_unit,
         attack_direction, hit_world_position, hit_weakspot, damage,
         attack_result, attack_type, damage_efficiency, is_critical_strike, ...)
 end)
-
--- A client simulates only its own player's shots; _shoot does not run again on resimulation.
--- Projectile and flamer actions resolve their hits on the server and are not counted.
-local function _record_ranged_shot(self)
-    local player = self._player
-    local shot_result = self._shot_result
-
-    if _Stats and player and not player.remote and player:is_human_controlled()
-            and shot_result and shot_result.data_valid then
-        _Stats.record_ranged_shot(_account_id(player), shot_result.hit_minion)
-    end
-end
-
-mod:hook_safe("ActionShootHitScan", "_shoot", _record_ranged_shot)
-mod:hook_safe("ActionShootPellets", "_shoot", _record_ranged_shot)
 
 -- Establish the initial health value before damage reports arrive.
 mod:hook("HealthExtension", "init",
