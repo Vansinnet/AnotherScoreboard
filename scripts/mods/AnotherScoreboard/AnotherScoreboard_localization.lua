@@ -571,6 +571,18 @@ local localization = {
 	    en = "Enemies Aggro'd",
 	    ["zh-cn"] = "吸引仇恨的敌人",
 	},
+	live_stat_hits_taken = {
+	    en = "Hits That Cost HP",
+	},
+	live_stat_highest_hit = {
+	    en = "Highest Single Hit",
+	},
+	live_stat_ranged_misses = {
+	    en = "Ranged Misses (yours only)",
+	},
+	live_stat_teammates_hurt = {
+	    en = "Teammates Hurt",
+	},
 	live_scoreboard_scale = {
 	    en = "Scale",
 	    ["zh-cn"] = "缩放",
@@ -770,6 +782,18 @@ local localization = {
 	live_header_enemies_aggroed = {
 	    en = "Aggro'd",
 	    ["zh-cn"] = "吸引仇恨",
+	},
+	live_header_hits_taken = {
+	    en = "HP Hits",
+	},
+	live_header_highest_hit = {
+	    en = "Top Hit",
+	},
+	live_header_ranged_misses = {
+	    en = "Misses",
+	},
+	live_header_teammates_hurt = {
+	    en = "Team Hurt",
 	},
 	show_boss_popup = {
 	    en = "Show Boss Damage Popup",

@@ -48,7 +48,7 @@ Players who leave within 30 seconds of the confirmed mission outcome remain in t
 
 The Live Stats HUD shows all human players and one to three selected statistics while you play. It is designed for quick comparisons without opening the full scoreboard.
 
-- Choose from 40 supported statistics, including damage, kills, survival, accuracy, boss damage, DoT, explosion, arc and electrocution damage, ammo, ability, aggro, and coherency values
+- Choose from 44 supported statistics, including damage, kills, survival, accuracy, boss damage, DoT, explosion, arc and electrocution damage, ammo, ability, aggro, coherency, and Fun Facts values (Ranged Misses shows `--` for other players)
 - The first Live Stat controls player sorting
 - Lower-is-better statistics sort in the correct direction
 - Duplicate selections swap columns instead of producing repeated values
