@@ -376,11 +376,11 @@ local STAT_DEFS = {
     { id = "enemies_aggroed",      label = "row_enemies_aggroed",      cat = "survival",     dir = "asc",  accum = "add", parent = "survival_utility", style = "sub" },
     { id = "coherency_uptime",     label = "row_coherency_uptime",     cat = "survival",     dir = "asc",  accum = "set", parent = "survival_utility", style = "sub" },
 
-    { id = "hits_taken",           label = "row_hits_taken",           cat = "fun_facts",    dir = "desc", accum = "add", style = "main" },
-    { id = "highest_hit",          label = "row_highest_hit",          cat = "fun_facts",    dir = "asc",  accum = "max", style = "main" },
+    { id = "hits_taken",           label = "row_hits_taken",           cat = "fun_facts",    dir = "desc", accum = "add", style = "sub" },
+    { id = "highest_hit",          label = "row_highest_hit",          cat = "fun_facts",    dir = "asc",  accum = "max", style = "sub" },
     -- Only the local player's shots are simulated on a client; other players have no entry.
-    { id = "ranged_misses",        label = "row_ranged_misses",        cat = "fun_facts",    dir = "desc", accum = "add", style = "main", ranked = false, optional = true },
-    { id = "teammates_hurt",       label = "row_teammates_hurt",       cat = "fun_facts",    dir = "desc", accum = "add", style = "main" },
+    { id = "ranged_misses",        label = "row_ranged_misses",        cat = "fun_facts",    dir = "desc", accum = "add", style = "sub", ranked = false, optional = true },
+    { id = "teammates_hurt",       label = "row_teammates_hurt",       cat = "fun_facts",    dir = "desc", accum = "add", style = "sub" },
 
 }
 
