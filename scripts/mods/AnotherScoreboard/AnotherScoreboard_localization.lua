@@ -581,7 +581,7 @@ local localization = {
 	    en = "Hits That Cost HP",
 	},
 	live_stat_highest_hit = {
-	    en = "Highest Single Hit",
+	    en = "Highest Single Hit Damage",
 	},
 	live_stat_teammates_hurt = {
 	    en = "Teammates Hurt",
@@ -1142,7 +1142,7 @@ local localization = {
 	    en = "Hits that cost HP",
 	},
 	row_highest_hit = {
-	    en = "Highest single hit",
+	    en = "Highest single hit damage",
 	},
 	row_teammates_hurt = {
 	    en = "Teammates hurt",

@@ -243,7 +243,7 @@ Ammo Pickups measures how many pickups were taken, while Ammo Gained estimates h
 | Statistic | Simplified calculation |
 | --- | --- |
 | Hits that cost HP | Count of direct hits on the player that took health or corruption; hits only on toughness, and damage-over-time or area ticks such as fire and gas, are not counted |
-| Highest single hit | The player's largest melee or ranged hit on one enemy, overkill included (companion attacks excluded) |
+| Highest single hit damage | The player's largest melee or ranged hit on one enemy, overkill included (companion attacks excluded) |
 | Teammates hurt | Count of direct hits that cost another player health or toughness, such as a barrel the player shot or a Poxburster the player pushed or killed |
 
 Lower values are treated as better for Hits that cost HP and Teammates hurt.
