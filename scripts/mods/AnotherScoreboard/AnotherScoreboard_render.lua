@@ -275,14 +275,17 @@ local RAINBOW_COLORS = {
     { 110, 200, 255 }, { 170, 140, 255 }, { 240, 130, 230 },
 }
 
--- Each UTF-8 character in the next colour, with the game's inline colour markup
--- (utilities/ui/text.lua:8-10); braces are dropped so a name cannot add markup.
-local function _rainbow_text(text)
+-- The colours move one letter along this many times a second.
+local RAINBOW_STEPS_PER_SECOND = 6
+
+-- Each UTF-8 character in the next colour, shifted `shift` letters along, with the game's inline
+-- colour markup (utilities/ui/text.lua:8-10); braces are dropped so a name cannot add markup.
+local function _rainbow_text(text, shift)
     local parts = {}
 
     for char in string.gmatch(text, "[%z\1-\127\194-\244][\128-\191]*") do
         if char ~= "{" and char ~= "}" then
-            local color = RAINBOW_COLORS[#parts % #RAINBOW_COLORS + 1]
+            local color = RAINBOW_COLORS[(#parts - shift) % #RAINBOW_COLORS + 1]
             parts[#parts + 1] = string_format("{#color(%d,%d,%d)}%s{#reset()}", color[1], color[2], color[3], char)
         end
     end
@@ -500,11 +503,25 @@ local function _add_player_header_passes(passes, players, ids, layout, ox, heade
         local player_name = _player_name(players[pi], aid, pi, name_len)
         local name_font_size = _fit_label_font_size(host, ui_renderer, player_name, "proxima_nova_bold",
             math_max(_dim.name_font, 9), col_w - _scaled(8), name_h)
-        if mod.has_rainbow_name(players[pi]) then
-            player_name = _rainbow_text(player_name)
-        end
-        passes[#passes + 1] = _txt("player_" .. pi, player_name, col_x, name_y, BASE_Z + 8,
+        local name_id = "player_" .. pi
+        local name_pass = _txt(name_id, player_name, col_x, name_y, BASE_Z + 8,
             col_w, name_h, "proxima_nova_bold", name_font_size, "center", "center", C.normal)
+        if mod.has_rainbow_name(players[pi]) then
+            -- One string per step, built once; the widget draw calls change_function every frame
+            -- with dt and the text pass reads the value each draw (ui_widget.lua:449-452, ui_passes.lua:742-762).
+            local frames = {}
+            for shift = 0, #RAINBOW_COLORS - 1 do
+                frames[shift + 1] = _rainbow_text(player_name, shift)
+            end
+            local period = #frames / RAINBOW_STEPS_PER_SECOND
+            local clock = 0
+            name_pass.value = frames[1]
+            name_pass.change_function = function(content, _, _, dt)
+                clock = (clock + (dt or 0)) % period
+                content[name_id] = frames[math_min(math_floor(clock * RAINBOW_STEPS_PER_SECOND) + 1, #frames)]
+            end
+        end
+        passes[#passes + 1] = name_pass
 
         if status_h > 0 then
             local text = mod:localize(status_key)
