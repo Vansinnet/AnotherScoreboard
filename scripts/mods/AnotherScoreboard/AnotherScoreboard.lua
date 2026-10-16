@@ -383,14 +383,17 @@ local _settings = {
     exact_damage_numbers = false,
 }
 
--- Large values as K/M, or as whole numbers when exact damage numbers are on.
+-- Large values as K/M, or with exact damage numbers on as whole numbers grouped by spaces,
+-- like the game's TextUtilities.format_currency (1 032 234).
 function mod.format_amount(value)
     if not _settings.exact_damage_numbers then
         if value >= 1e6 then return string.format("%.1fM", value * 1e-6) end
         if value >= 1e3 then return string.format("%.1fK", value * 1e-3) end
+        return string.format("%.0f", value)
     end
 
-    return string.format("%.0f", value)
+    local grouped = string.format("%.0f", value):reverse():gsub("(%d%d%d)", "%1 "):reverse()
+    return (grouped:gsub("^ ", ""))
 end
 
 local SCOREBOARD_STAT_SETTING_BY_ID = {}

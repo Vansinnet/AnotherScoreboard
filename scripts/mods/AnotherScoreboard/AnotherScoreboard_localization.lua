@@ -291,7 +291,7 @@ local localization = {
 	    en = "Exact Damage Numbers",
 	},
 	exact_damage_numbers_tooltip = {
-	    en = "Show damage and other large values as whole numbers, for example 123456 instead of 123.5K, in the scoreboards, Live Stats and the boss damage popup.",
+	    en = "Show damage and other large values as whole numbers grouped by spaces, for example 123 456 instead of 123.5K, in the scoreboards, Live Stats and the boss damage popup.",
 	},
 	scoreboard_opacity = {
 	    en = "Opacity",
