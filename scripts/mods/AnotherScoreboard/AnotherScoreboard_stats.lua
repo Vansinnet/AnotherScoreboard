@@ -378,8 +378,6 @@ local STAT_DEFS = {
 
     { id = "hits_taken",           label = "row_hits_taken",           cat = "fun_facts",    dir = "desc", accum = "add", style = "sub" },
     { id = "highest_hit",          label = "row_highest_hit",          cat = "fun_facts",    dir = "asc",  accum = "max", style = "sub" },
-    -- Only the local player's shots are simulated on a client; other players have no entry.
-    { id = "ranged_misses",        label = "row_ranged_misses",        cat = "fun_facts",    dir = "desc", accum = "add", style = "sub", ranked = false, optional = true },
     { id = "teammates_hurt",       label = "row_teammates_hurt",       cat = "fun_facts",    dir = "desc", accum = "add", style = "sub" },
 
 }
@@ -669,10 +667,8 @@ end
 function Stats.ensure_entries(account_ids)
     for _, def in ipairs(STAT_DEFS) do
         local d = _data[def.id]
-        if not def.optional then
-            for aid in pairs(account_ids) do
-                if not d[aid] then d[aid] = { value = 0, score = 0 } end
-            end
+        for aid in pairs(account_ids) do
+            if not d[aid] then d[aid] = { value = 0, score = 0 } end
         end
     end
     local td = _data._total_damage
@@ -1052,7 +1048,6 @@ function Stats.snapshot_sections(account_ids, sections)
                 style = row.style,
                 show_total = row.show_total,
                 ranked = row.ranked,
-                optional = row.optional,
                 no_values = row.no_values,
                 suffix = row.suffix,
                 decimals = row.decimals,
@@ -1101,13 +1096,11 @@ function Stats.snapshot_sections(account_ids, sections)
                 elseif row.id and _data[row.id] then
                     local data = _data[row.id][aid]
 
-                    if data or not row.optional then
-                        row_value = {
-                            score = data and data.score or 0,
-                            best = data and data.best or false,
-                            worst = data and data.worst or false,
-                        }
-                    end
+                    row_value = {
+                        score = data and data.score or 0,
+                        best = data and data.best or false,
+                        worst = data and data.worst or false,
+                    }
                 end
 
                 if row_value then
@@ -1385,10 +1378,6 @@ function Stats.handle_player_attacked(attacker_aid, attacked_aid, damage, attack
             and (hurt_health or TOUGHNESS_ATTACK_RESULTS[attack_result]) then
         Stats.record("teammates_hurt", attacker_aid, 1)
     end
-end
-
-function Stats.record_ranged_shot(aid, hit_enemy)
-    Stats.record("ranged_misses", aid, hit_enemy and 0 or 1)
 end
 
 return Stats

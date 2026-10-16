@@ -583,9 +583,6 @@ local localization = {
 	live_stat_highest_hit = {
 	    en = "Highest Single Hit",
 	},
-	live_stat_ranged_misses = {
-	    en = "Ranged Misses (yours only)",
-	},
 	live_stat_teammates_hurt = {
 	    en = "Teammates Hurt",
 	},
@@ -794,9 +791,6 @@ local localization = {
 	},
 	live_header_highest_hit = {
 	    en = "Top Hit",
-	},
-	live_header_ranged_misses = {
-	    en = "Misses",
 	},
 	live_header_teammates_hurt = {
 	    en = "Team Hurt",
@@ -1149,9 +1143,6 @@ local localization = {
 	},
 	row_highest_hit = {
 	    en = "Highest single hit",
-	},
-	row_ranged_misses = {
-	    en = "Ranged misses",
 	},
 	row_teammates_hurt = {
 	    en = "Teammates hurt",

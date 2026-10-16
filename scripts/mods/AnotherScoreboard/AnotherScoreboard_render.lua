@@ -291,11 +291,9 @@ local function _row_player_data(row, ids, num_players)
         local damage = row.display_damage_values and (row.display_damage_values[aid] or 0)
         local vc = _row_depth(row) > 0 and C.sub or C.normal
         local rank
-        local missing = false
 
         if row.values then
             local value = row.values[aid]
-            missing = value == nil
 
             if type(value) == "table" then
                 score = value.score or value.value or 0
@@ -306,9 +304,8 @@ local function _row_player_data(row, ids, num_players)
             end
         else
             local sd = mod:get_stat_data(row.id)
-            local rd = sd and sd[aid]
-            missing = rd == nil
             if sd then
+                local rd = sd[aid]
                 score = rd and rd.score or 0
                 if ranked and rd and rd.best then vc, rank = C.best, "best" end
                 if ranked and rd and rd.worst and score ~= 0 then vc, rank = C.worst, "worst" end
@@ -316,7 +313,7 @@ local function _row_player_data(row, ids, num_players)
         end
 
         player_data[pi] = { score = score, percentage = percentage, damage = damage, color = vc, rank = rank }
-        if (row.external or row.optional) and missing then player_data[pi].score = nil end
+        if row.external and not (row.values and row.values[aid]) then player_data[pi].score = nil end
     end
 
     return player_data
@@ -432,7 +429,6 @@ local function _add_row_passes(passes, row, row_key, row_y, layout, label_x, lab
             local col_x = ox + gap + label_w + gap + (pi - 1) * (col_w + gap)
             local pd = player_data[pi]
             local value_text = row.external and mod.external_stats.format(row, pd.score)
-                or pd.score == nil and "--"
                 or _row_value(row, pd.score, pd.percentage, pd.damage)
             local value_fs = _fit_label_font_size(host, ui_renderer, value_text, "proxima_nova_bold", fs,
                 col_w - _scaled(2), rh)

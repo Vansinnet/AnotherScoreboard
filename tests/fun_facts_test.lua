@@ -1,6 +1,6 @@
 -- Run from the workspace root: tools/luajit/luajit mods/active/AnotherScoreboard/tests/fun_facts_test.lua
--- Offline test: the Fun Facts (Beta) rows (hits that cost HP, highest single hit, ranged misses,
--- teammates hurt), their saving, rejoin merging and the local-only misses row.
+-- Offline test: the Fun Facts (Beta) rows (hits that cost HP, highest single hit, teammates hurt),
+-- their saving, rejoin merging and Live Stats choices.
 local root = arg and arg[1] or "mods/active/AnotherScoreboard/scripts/mods/AnotherScoreboard/"
 local stats_file = arg and arg[2] or (root .. "AnotherScoreboard_stats.lua")
 local registered = {}
@@ -103,15 +103,10 @@ hit("a", "push", crusher, 3000, "damaged", "push")
 hit("a", "light_sword", crusher, 0, "blocked", "melee")
 eq(value("highest_hit", "a"), 1500, "companion, explosion, push and blocked hits do not count")
 
--- 4. Ranged misses: only players with simulated shots get an entry.
-Stats.record_ranged_shot("a", true)
-Stats.record_ranged_shot("a", false)
-Stats.record_ranged_shot("a", nil)
-eq(value("ranged_misses", "a"), 2, "shots that hit no enemy")
+-- 4. Every displayed player gets an entry.
 Stats.ensure_entries({ a = true, b = true })
-eq(Stats.data_for("ranged_misses").b, nil, "no misses entry for an untracked player")
-eq(Stats.data_for("highest_hit").b ~= nil, true, "other fun facts have entries")
-eq(Stats.data_for("teammates_hurt").b ~= nil, true, "ensured entry for a player without data")
+eq(Stats.data_for("highest_hit").b ~= nil, true, "highest hit entry for a player without data")
+eq(Stats.data_for("teammates_hurt").b ~= nil, true, "teammates hurt entry for a player without data")
 
 -- 5. The section and its saved rows.
 local section
@@ -119,18 +114,16 @@ for _, s in ipairs(Stats.sections()) do
     if s.category.key == "fun_facts" then section = s end
 end
 eq(section and section.category.label, "cat_fun_facts", "fun facts section")
-eq(section.rows[1].id .. "," .. section.rows[2].id .. "," .. section.rows[3].id .. "," .. section.rows[4].id,
-    "hits_taken,highest_hit,ranged_misses,teammates_hurt", "row order")
-for i = 1, 4 do
+eq(#section.rows, 3, "fun facts row count")
+eq(section.rows[1].id .. "," .. section.rows[2].id .. "," .. section.rows[3].id,
+    "hits_taken,highest_hit,teammates_hurt", "row order")
+for i = 1, 3 do
     eq(section.rows[i].style, "sub", section.rows[i].id .. " uses the detail row size")
 end
 local saved_rows = {}
 for _, s in ipairs(Stats.snapshot_sections({ a = true, b = true })) do
     for _, r in ipairs(s.rows) do saved_rows[r.id] = r end
 end
-eq(saved_rows.ranged_misses.optional, true, "saved misses row is optional")
-eq(saved_rows.ranged_misses.values.a.score, 2, "saved misses for the local player")
-eq(saved_rows.ranged_misses.values.b, nil, "no saved misses for another player")
 eq(saved_rows.highest_hit.values.a.score, 1500, "saved highest hit")
 eq(saved_rows.teammates_hurt.values.b.score, 0, "saved zero for a player without data")
 
@@ -140,12 +133,10 @@ Stats.clear()
 hit("a", "light_sword", crusher, 1200, "damaged", "melee")
 hit("b", "light_sword", crusher, 700, "damaged", "melee")
 attacked(nil, "b", 10, "damaged", "melee")
-Stats.record_ranged_shot("a", false)
 eq(Stats.merge_active_run(run), true, "merge imports")
 eq(value("highest_hit", "a"), 1500, "merge keeps the saved higher hit")
 eq(value("highest_hit", "b"), 700, "merge keeps the current hit without a saved one")
 eq(value("hits_taken", "b"), 6, "merge adds hits")
-eq(value("ranged_misses", "a"), 3, "merge adds misses")
 run = Stats.export_active_run()
 Stats.clear()
 hit("a", "light_sword", crusher, 2500, "damaged", "melee")
@@ -153,13 +144,12 @@ eq(Stats.merge_active_run(run), true, "second merge imports")
 eq(value("highest_hit", "a"), 2500, "merge keeps the current higher hit")
 run.stats.highest_hit = nil
 run.stats.hits_taken = nil
-run.stats.ranged_misses = nil
 run.stats.teammates_hurt = nil
 Stats.clear()
 eq(Stats.import_active_run(run), true, "a run saved before Fun Facts imports")
 eq(value("highest_hit", "a"), 0, "no highest hit for an old run")
 
--- 7. Live Stats: the four rows are selectable, misses is optional, and every catalog stat exists.
+-- 7. Live Stats: the three rows are selectable, and every catalog stat exists.
 local live_stats = dofile(root .. "AnotherScoreboard_live_stats.lua")
 local live_by_key = {}
 for _, stat in ipairs(live_stats) do
@@ -170,9 +160,8 @@ for _, stat in ipairs(live_stats) do
         end
     end
 end
-eq(#live_stats, 44, "live stat count")
-eq(live_by_key.hits_taken.stat_id .. "," .. live_by_key.highest_hit.stat_id .. "," .. live_by_key.ranged_misses.stat_id
-    .. "," .. live_by_key.teammates_hurt.stat_id, "hits_taken,highest_hit,ranged_misses,teammates_hurt", "fun facts live stats")
-eq(live_by_key.ranged_misses.optional, true, "live misses is optional")
+eq(#live_stats, 43, "live stat count")
+eq(live_by_key.hits_taken.stat_id .. "," .. live_by_key.highest_hit.stat_id .. "," .. live_by_key.teammates_hurt.stat_id,
+    "hits_taken,highest_hit,teammates_hurt", "fun facts live stats")
 
 print(string.format("fun_facts_test: %d checks passed", checks))

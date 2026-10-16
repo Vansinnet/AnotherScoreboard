@@ -41,6 +41,5 @@ return {
     { key = "enemies_aggroed", stat_id = "enemies_aggroed", option = "live_stat_enemies_aggroed", header = "live_header_enemies_aggroed", format = "count" },
     { key = "hits_taken", stat_id = "hits_taken", option = "live_stat_hits_taken", header = "live_header_hits_taken", format = "count", lower_better = true },
     { key = "highest_hit", stat_id = "highest_hit", option = "live_stat_highest_hit", header = "live_header_highest_hit", format = "short" },
-    { key = "ranged_misses", stat_id = "ranged_misses", option = "live_stat_ranged_misses", header = "live_header_ranged_misses", format = "count", lower_better = true, optional = true },
     { key = "teammates_hurt", stat_id = "teammates_hurt", option = "live_stat_teammates_hurt", header = "live_header_teammates_hurt", format = "count", lower_better = true },
 }
