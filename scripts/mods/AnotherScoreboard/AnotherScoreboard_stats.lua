@@ -126,6 +126,12 @@ local NON_HIT_ATTACK_RESULTS = {
     shield_blocked = true,
 }
 
+local TOUGHNESS_ATTACK_RESULTS = {
+    toughness_absorbed = true,
+    toughness_absorbed_melee = true,
+    toughness_broken = true,
+}
+
 local function is_companion_attack(damage_profile, attack_type)
     return attack_type == "companion_dog"
         or damage_profile and COMPANION_DAMAGE_PROFILES[damage_profile.name] == true
@@ -370,6 +376,12 @@ local STAT_DEFS = {
     { id = "enemies_aggroed",      label = "row_enemies_aggroed",      cat = "survival",     dir = "asc",  accum = "add", parent = "survival_utility", style = "sub" },
     { id = "coherency_uptime",     label = "row_coherency_uptime",     cat = "survival",     dir = "asc",  accum = "set", parent = "survival_utility", style = "sub" },
 
+    { id = "hits_taken",           label = "row_hits_taken",           cat = "fun_facts",    dir = "desc", accum = "add", style = "main" },
+    { id = "highest_hit",          label = "row_highest_hit",          cat = "fun_facts",    dir = "asc",  accum = "max", style = "main" },
+    -- Only the local player's shots are simulated on a client; other players have no entry.
+    { id = "ranged_misses",        label = "row_ranged_misses",        cat = "fun_facts",    dir = "desc", accum = "add", style = "main", ranked = false, optional = true },
+    { id = "teammates_hurt",       label = "row_teammates_hurt",       cat = "fun_facts",    dir = "desc", accum = "add", style = "main" },
+
 }
 
 for _, category in ipairs({ "lesser", "specials", "elites" }) do
@@ -429,12 +441,14 @@ local _kill_damage_enabled = false
 local CATEGORIES = {
     { key = "combat",       label = "cat_combat"       },
     { key = "survival",     label = "cat_survival"     },
+    { key = "fun_facts",    label = "cat_fun_facts"    },
 }
 
 local ACCUMULATORS = {
     add  = function(entry, raw) entry.score = entry.score + raw; entry.value = entry.value + raw end,
     diff = function(entry, raw) entry.score = entry.score + math_max(raw - entry.value, 0); entry.value = raw end,
     set  = function(entry, raw) entry.score = raw; entry.value = raw end,
+    max  = function(entry, raw) entry.score = math_max(entry.score, raw); entry.value = entry.score end,
 }
 
 local function _validate(data, accounts)
@@ -655,8 +669,10 @@ end
 function Stats.ensure_entries(account_ids)
     for _, def in ipairs(STAT_DEFS) do
         local d = _data[def.id]
-        for aid in pairs(account_ids) do
-            if not d[aid] then d[aid] = { value = 0, score = 0 } end
+        if not def.optional then
+            for aid in pairs(account_ids) do
+                if not d[aid] then d[aid] = { value = 0, score = 0 } end
+            end
         end
     end
     local td = _data._total_damage
@@ -846,6 +862,8 @@ function Stats.merged_active_run(snapshot)
                 local score = _safe_sum(saved.score, current.score)
                 if not score then return false end
                 target[aid] = { value = current.value, score = score }
+            elseif def.accum == "max" and saved.score > current.score then
+                target[aid] = saved
             end
         end
     end
@@ -1034,6 +1052,7 @@ function Stats.snapshot_sections(account_ids, sections)
                 style = row.style,
                 show_total = row.show_total,
                 ranked = row.ranked,
+                optional = row.optional,
                 no_values = row.no_values,
                 suffix = row.suffix,
                 decimals = row.decimals,
@@ -1082,11 +1101,13 @@ function Stats.snapshot_sections(account_ids, sections)
                 elseif row.id and _data[row.id] then
                     local data = _data[row.id][aid]
 
-                    row_value = {
-                        score = data and data.score or 0,
-                        best = data and data.best or false,
-                        worst = data and data.worst or false,
-                    }
+                    if data or not row.optional then
+                        row_value = {
+                            score = data and data.score or 0,
+                            best = data and data.best or false,
+                            worst = data and data.worst or false,
+                        }
+                    end
                 end
 
                 if row_value then
@@ -1236,6 +1257,10 @@ function Stats.handle_attack(aid, damage_profile, attacked_unit, hit_weakspot, d
     -- damage, not as the player's own ranged hits.
     local companion_attack = is_companion_attack(damage_profile, attack_type)
     local melee_or_ranged = not companion_attack and (attack_type == "melee" or attack_type == "ranged")
+    if melee_or_ranged and (damage or 0) > 0 then
+        -- The reported damage, overkill included.
+        Stats.record("highest_hit", aid, damage)
+    end
     if melee_or_ranged and not NON_HIT_ATTACK_RESULTS[attack_result] then
         Stats.record("melee_ranged_hits", aid, 1)
         if hit_weakspot then
@@ -1340,6 +1365,30 @@ function Stats.handle_attack(aid, damage_profile, attacked_unit, hit_weakspot, d
     end
 
     return boss_result
+end
+
+-- An attack report on a player. Its damage is health and corruption only; toughness is not in it.
+-- Damage over time and area ticks (no attack type, or buff) are not hits.
+function Stats.handle_player_attacked(attacker_aid, attacked_aid, damage, attack_result, attack_type)
+    if attack_type == nil or attack_type == "buff" then
+        return
+    end
+
+    local hurt_health = (damage or 0) > 0
+    if hurt_health then
+        Stats.record("hits_taken", attacked_aid, 1)
+    end
+
+    -- Players can only hurt each other with profiles that allow friendly fire: barrels, and
+    -- a poxburster explosion credited to the player who pushed or killed it.
+    if attacker_aid and attacker_aid ~= attacked_aid
+            and (hurt_health or TOUGHNESS_ATTACK_RESULTS[attack_result]) then
+        Stats.record("teammates_hurt", attacker_aid, 1)
+    end
+end
+
+function Stats.record_ranged_shot(aid, hit_enemy)
+    Stats.record("ranged_misses", aid, hit_enemy and 0 or 1)
 end
 
 return Stats

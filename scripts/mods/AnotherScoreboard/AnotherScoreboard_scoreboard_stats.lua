@@ -23,4 +23,8 @@ return {
     { id = "combat_ability_uses", label = "row_combat_ability_uses", section = "survival" },
     { id = "enemies_aggroed", label = "row_enemies_aggroed", section = "survival" },
     { id = "coherency_uptime", label = "row_coherency_uptime", section = "survival" },
+    { id = "hits_taken", label = "row_hits_taken", section = "fun_facts" },
+    { id = "highest_hit", label = "row_highest_hit", section = "fun_facts" },
+    { id = "ranged_misses", label = "row_ranged_misses", section = "fun_facts" },
+    { id = "teammates_hurt", label = "row_teammates_hurt", section = "fun_facts" },
 }

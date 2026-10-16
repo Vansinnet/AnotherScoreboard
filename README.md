@@ -117,7 +117,7 @@ Settings are organized by feature:
 - **End-of-Mission Scoreboard:** automatic display, scale, opacity, and position
 - **Live Stats HUD:** enable, class-specific columns, scale, position, and background opacity
 - **Boss Damage Popup:** enable, displayed columns, scale, duration, position, and background opacity
-- **Toggle Stats in Scoreboard:** visibility of individual built-in combat and survival rows, and "Show damage beside enemy kills" (off by default)
+- **Toggle Stats in Scoreboard:** visibility of individual built-in combat, survival and Fun Facts (Beta) rows, and "Show damage beside enemy kills" (off by default)
 - **Keybinds:** Scoreboard History and External stat details
 
 Hiding a built-in row affects only its display. The mod continues to track and save that statistic. The exception is damage beside enemy kills, which is recorded only while that option is on.
@@ -237,6 +237,17 @@ Healing does not subtract from HP Lost. Lower values are treated as better for H
 | Coherency | Time near at least one teammate / eligible alive time x 100 |
 
 Ammo Pickups measures how many pickups were taken, while Ammo Gained estimates how much ammunition they restored. An enemy can credit more than one player if it clearly switches targets during its lifetime, but is counted at most once per player. Dead or hogtied time is excluded from Coherency eligible time.
+
+### Fun Facts (Beta)
+
+| Statistic | Simplified calculation |
+| --- | --- |
+| Hits that cost HP | Count of direct hits on the player that took health or corruption; hits only on toughness, and damage-over-time or area ticks such as fire and gas, are not counted |
+| Highest single hit | The player's largest melee or ranged hit on one enemy, overkill included (companion attacks excluded) |
+| Ranged misses | Shots from hitscan and shotgun weapons that hit no enemy; projectile weapons and flamers are not counted. Shown only for you: the game simulates only your own shots, so other players show `--` |
+| Teammates hurt | Count of direct hits that cost another player health or toughness, such as a barrel the player shot or a Poxburster the player pushed or killed |
+
+Lower values are treated as better for Hits that cost HP and Teammates hurt. Ranged misses is not ranked.
 
 ### Display and Ranking
 
