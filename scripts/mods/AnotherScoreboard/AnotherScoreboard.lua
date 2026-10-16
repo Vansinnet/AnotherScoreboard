@@ -1945,12 +1945,13 @@ function mod.get_live_scoreboard_rows()
 
         for i = 1, _settings.live_scoreboard_stat_count do
             local stat = LIVE_STATS[_settings.live_scoreboard_stats[i]]
-            local value = 0
+            local value = 0 ---@type number?
 
             if stat.stat_id then
                 local data = _Stats.data_for(stat.stat_id)
                 local entry = data and data[aid]
-                value = entry and entry.score or 0
+                -- An optional stat has no value for a player it cannot track; the HUD shows "--".
+                value = entry and entry.score or not stat.optional and 0 or nil
             elseif stat.per_second_stat_id then
                 local data = _Stats.data_for(stat.per_second_stat_id)
                 local entry = data and data[aid]

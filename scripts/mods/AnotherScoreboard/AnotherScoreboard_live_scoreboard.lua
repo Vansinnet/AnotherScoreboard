@@ -8,6 +8,7 @@ local Themes = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/A
 
 local math_floor = math.floor
 local math_max = math.max
+local math_huge = math.huge
 local table_sort = table.sort
 local string_format = string.format
 local utf8_string_length = Utf8.string_length
@@ -451,9 +452,11 @@ function HudElementLiveScoreboard:update(dt, t, ui_renderer, render_settings, in
         return
     end
 
+    -- Players without a value sort last.
+    local missing = stat_columns[1].lower_better and math_huge or -math_huge
     table_sort(rows, function(a, b)
-        local a_value = a.values[1] or 0
-        local b_value = b.values[1] or 0
+        local a_value = a.values[1] or missing
+        local b_value = b.values[1] or missing
 
         if a_value == b_value then
             return (a.name or "") < (b.name or "")
@@ -537,7 +540,8 @@ function HudElementLiveScoreboard:update(dt, t, ui_renderer, render_settings, in
             row_widget.content.player_icon = row.archetype_icon or ""
             row_widget.content.player = fitted_name(self, ui_renderer, row.name, row_style.player, player_name_w - 2)
             for j = 1, stat_count do
-                row_widget.content["stat_" .. j] = format_value(row.values[j] or 0, stat_columns[j].format)
+                local value = row.values[j]
+                row_widget.content["stat_" .. j] = value == nil and "--" or format_value(value, stat_columns[j].format)
             end
             row_widget.visible = true
             row_widget.dirty = true

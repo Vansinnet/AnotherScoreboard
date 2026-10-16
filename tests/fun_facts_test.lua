@@ -156,4 +156,20 @@ Stats.clear()
 eq(Stats.import_active_run(run), true, "a run saved before Fun Facts imports")
 eq(value("highest_hit", "a"), 0, "no highest hit for an old run")
 
+-- 7. Live Stats: the four rows are selectable, misses is optional, and every catalog stat exists.
+local live_stats = dofile(root .. "AnotherScoreboard_live_stats.lua")
+local live_by_key = {}
+for _, stat in ipairs(live_stats) do
+    live_by_key[stat.key] = stat
+    for _, field in ipairs({ "stat_id", "numerator_stat_id", "denominator_stat_id", "per_second_stat_id" }) do
+        if stat[field] then
+            eq(Stats.data_for(stat[field]) ~= nil, true, "live stat " .. stat.key .. " " .. field .. " exists")
+        end
+    end
+end
+eq(#live_stats, 44, "live stat count")
+eq(live_by_key.hits_taken.stat_id .. "," .. live_by_key.highest_hit.stat_id .. "," .. live_by_key.ranged_misses.stat_id
+    .. "," .. live_by_key.teammates_hurt.stat_id, "hits_taken,highest_hit,ranged_misses,teammates_hurt", "fun facts live stats")
+eq(live_by_key.ranged_misses.optional, true, "live misses is optional")
+
 print(string.format("fun_facts_test: %d checks passed", checks))
