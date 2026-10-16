@@ -726,6 +726,14 @@ local function _account_id(player)
     return player:account_id() or player:name()
 end
 
+-- Most attacked units are minions; skip the player lookup's roster scan for them.
+local function _attacked_player(unit)
+    local unit_data = unit and ScriptUnit.has_extension(unit, "unit_data_system")
+    local breed = unit_data and unit_data:breed()
+
+    return Breed.is_player(breed) and _player_from_unit(unit) or nil
+end
+
 function mod._retire_player_unit(aid, unit)
     _state_tracker[aid] = nil
     _disabled_tracker[aid] = nil
@@ -2838,6 +2846,11 @@ function(func, self, damage_profile, attacked_unit, attacking_unit,
             _pump_boss_popup_queue()
         end
     end
+    local attacked_player = _attacked_player(attacked_unit)
+    if attacked_player and _Stats then
+        _Stats.handle_player_attacked(player and aid, _account_id(attacked_player), damage,
+            attack_result, attack_type)
+    end
     if mod.stagger_register_attack then
         mod.stagger_register_attack(attacked_unit, attacking_unit, damage_profile, attack_type,
             aid, attack_direction, hit_world_position)
@@ -2850,6 +2863,21 @@ function(func, self, damage_profile, attacked_unit, attacking_unit,
         attack_direction, hit_world_position, hit_weakspot, damage,
         attack_result, attack_type, damage_efficiency, is_critical_strike, ...)
 end)
+
+-- A client simulates only its own player's shots; _shoot does not run again on resimulation.
+-- Projectile and flamer actions resolve their hits on the server and are not counted.
+local function _record_ranged_shot(self)
+    local player = self._player
+    local shot_result = self._shot_result
+
+    if _Stats and player and not player.remote and player:is_human_controlled()
+            and shot_result and shot_result.data_valid then
+        _Stats.record_ranged_shot(_account_id(player), shot_result.hit_minion)
+    end
+end
+
+mod:hook_safe("ActionShootHitScan", "_shoot", _record_ranged_shot)
+mod:hook_safe("ActionShootPellets", "_shoot", _record_ranged_shot)
 
 -- Establish the initial health value before damage reports arrive.
 mod:hook("HealthExtension", "init",

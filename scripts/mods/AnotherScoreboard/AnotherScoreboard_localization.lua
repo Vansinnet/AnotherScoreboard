@@ -867,6 +867,9 @@ local localization = {
 	    en = "Survival Stats",
 	    ["zh-cn"] = "生存统计",
 	},
+	scoreboard_stats_fun_facts_header = {
+	    en = "Fun Facts (Beta)",
+	},
 	scoreboard_stats_group_tooltip = {
 	    en = "Visibility settings only. All stats continue to be tracked and saved.",
 	    ["zh-cn"] = "这里只控制显示。所有统计仍会继续追踪和保存。",
@@ -913,6 +916,9 @@ local localization = {
 	cat_performance = {
 	    en = "PERFORMANCE",
 	    ["zh-cn"] = "表现",
+	},
+	cat_fun_facts = {
+	    en = "Fun Facts (Beta)",
 	},
 
 	row_total_kills = {
@@ -1107,6 +1113,18 @@ local localization = {
 	row_coherency_uptime = {
 	    en = "Coherency",
 	    ["zh-cn"] = "协同覆盖",
+	},
+	row_hits_taken = {
+	    en = "Hits that cost HP",
+	},
+	row_highest_hit = {
+	    en = "Highest single hit",
+	},
+	row_ranged_misses = {
+	    en = "Ranged misses",
+	},
+	row_teammates_hurt = {
+	    en = "Teammates hurt",
 	},
 
 	row_survivability = {
