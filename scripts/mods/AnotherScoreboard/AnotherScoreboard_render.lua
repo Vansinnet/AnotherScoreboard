@@ -71,9 +71,7 @@ local _rect
 local _txt
 
 local function _shorten(v)
-    if v >= 1e6 then return string_format("%.1fM", v * 1e-6) end
-    if v >= 1e3 then return string_format("%.1fK", v * 1e-3) end
-    return string_format("%.0f", v)
+    return mod.format_amount(v)
 end
 
 local function _truncate(text, max_len)

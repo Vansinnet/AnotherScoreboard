@@ -219,13 +219,7 @@ local function _apply_popup_layout(self, scale, settings, player_count)
 end
 
 local function _shorten(value)
-    if value >= 1e6 then
-        return string_format("%.1fM", value * 1e-6)
-    elseif value >= 1e3 then
-        return string_format("%.1fK", value * 1e-3)
-    end
-
-    return string_format("%.0f", value)
+    return mod.format_amount(value)
 end
 
 local function _player_display(aid, fallback_index)
