@@ -121,6 +121,9 @@ end
 eq(section and section.category.label, "cat_fun_facts", "fun facts section")
 eq(section.rows[1].id .. "," .. section.rows[2].id .. "," .. section.rows[3].id .. "," .. section.rows[4].id,
     "hits_taken,highest_hit,ranged_misses,teammates_hurt", "row order")
+for i = 1, 4 do
+    eq(section.rows[i].style, "sub", section.rows[i].id .. " uses the detail row size")
+end
 local saved_rows = {}
 for _, s in ipairs(Stats.snapshot_sections({ a = true, b = true })) do
     for _, r in ipairs(s.rows) do saved_rows[r.id] = r end
