@@ -205,4 +205,43 @@ eq(view_builds, 2)
 view:_toggle_external_group(group, true)
 view:update(0.01, 1.01, input)
 eq(view_builds, 3)
+
+-- Scoreboard view packages: only the shown players' class talent packages, every class when
+-- any player's class is unknown (UIManager.load_view reads Views[view_name].package).
+local views = { another_scoreboard_view = { package = "unchanged" } }
+local views_require = mod.original_require
+function mod:original_require(path)
+    if path == "scripts/ui/views/views" then return views end
+    return views_require(self, path)
+end
+local function package_set()
+    local set, count = {}, 0
+    for _, name in ipairs(views.another_scoreboard_view.package) do set[name] = true; count = count + 1 end
+    return set, count
+end
+local function shown(...)
+    local players = {}
+    for i, archetype in ipairs({ ... }) do
+        players[i] = { loadout_snapshot = archetype ~= false and { archetype = archetype } or nil }
+    end
+    return players
+end
+local CLASS = "packages/ui/views/talent_builder_view/"
+eq(#mod.scoreboard_view_packages(nil), 10)
+mod.prepare_scoreboard_view_packages(shown("zealot", "ogryn", "zealot", "cryptic"))
+local set, count = package_set()
+eq(count, 6)
+eq(set[CLASS .. "zealot"] and set[CLASS .. "ogryn"] and set[CLASS .. "cryptic"], true)
+eq(set[CLASS .. "veteran"], nil)
+eq(set[CLASS .. "talent_builder_view"] and set["packages/ui/views/options_view/options_view"]
+    and set["packages/ui/views/training_grounds_options_view/training_grounds_options_view"], true)
+mod.prepare_scoreboard_view_packages(shown("zealot", false))
+eq(select(2, package_set()), 10)
+mod.prepare_scoreboard_view_packages(shown("zealot", "a_future_class"))
+eq(select(2, package_set()), 10)
+mod.prepare_scoreboard_view_packages(nil)
+eq(select(2, package_set()), 10)
+mod.prepare_scoreboard_view_packages({})
+eq(select(2, package_set()), 10)
+
 print("external_integration_test: " .. checks .. " checks passed")

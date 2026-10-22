@@ -1,6 +1,6 @@
 # AnotherScoreboard: design
 
-This file starts with the History class filter, the scripted-death boss kill and the best/worst highlight settings. Older features are described in `README.md`, `EXTERNAL_STATS_API.md` and `types/CONTRACTS.md` (workspace root); add them here when they are next changed.
+This file starts with the History class filter, the scripted-death boss kill, the best/worst highlight settings and the scoreboard view packages. Older features are described in `README.md`, `EXTERNAL_STATS_API.md` and `types/CONTRACTS.md` (workspace root); add them here when they are next changed.
 
 ## History class filter
 
@@ -71,3 +71,31 @@ Since Darktide 1.13.3 the Prophet of Decay (`renegade_wizard`) has `has_scripted
 - `highlight_best` and `highlight_worst` (Scoreboard Appearance, both on by default, so existing users see no change) turn off the green best value with its marker and the red worst value in full scoreboards: Tab overlay, scoreboard view, end screen and history. When off, the value keeps the row's normal colour. Ranking itself is unchanged.
 - `_combined_panel_passes` sets the render module's `_highlight_best` and `_highlight_worst` from the render settings, the same way the theme is set per build; `_row_player_data` reads them. A change rebuilds an open scoreboard like the other appearance settings.
 - No offline harness covers the rendering; tested only by validation.
+
+## Scoreboard view packages
+
+### Decision
+
+Players reported a pause before the end-of-mission scoreboard. Console logs (`[Profiler] [main] Stall`) showed a 5.4 s `Lua->update` stall at every mission end up to v2.0.2, from `History.prune`'s `io.popen('dir')`; v2.0.3 removed it, and the save itself costs about 14 ms (measured offline on real 380 KB history files). What remains on the developer's PC is about 0.3-0.8 s, mostly GPU resource upload while the end screen and the scoreboard view load. The view loaded the talent packages of all seven classes every time it opened, and released them when it closed. It now loads only the classes of the players it shows. The gain is not measured.
+
+### How it works
+
+- `mod.scoreboard_view_packages(archetypes)` returns the three base packages (options view, training grounds options view for the weapon icon frame, talent builder) plus `packages/ui/views/talent_builder_view/<class>` for each class in the set, or for every class in `AnotherScoreboard_archetypes.lua` when the set is nil. Registration uses the full list.
+- `mod.prepare_scoreboard_view_packages(players)` runs right before every open (end screen and history entry). It uses each player's `loadout_snapshot.archetype`, the same field the loadout panel and talent tree draw from. If there are no players, or any player has no snapshot or an unknown class, it loads every class, as before.
+- These are module functions, not locals: the main chunk is at Lua's 200-local limit.
+
+### Source contracts
+
+- `UIManager.load_view` reads `Views[view_name].package` (a string or an array) each time a view is created (`darktide-source/scripts/managers/ui/ui_manager.lua:1152-1196`), from `BaseView.init` (`ui/views/base_view.lua:45`). `UIViewHandler._open` creates the instance synchronously (`managers/ui/ui_view_handler.lua:741-800`); `settings_override` clones the settings only for the instance.
+- `Views` is the view handler's `_view_list` (`ui_manager.lua:23,79`, `ui_view_handler.lua:17-18`), and DMF stores the registered `view_settings` there (`dmf-source/scripts/mods/dmf/modules/gui/custom_views.lua:94`).
+- `UIManager.unload_view` releases the packages stored at load (`ui_manager.lua:1304-1324`), so changing the list for the next open does not affect an open view.
+- `PackageManager._bring_in` calls `ResourcePackage.flush` on the main thread when a package finishes loading (`foundation/managers/package/package_manager.lua:140-158`).
+- `load_always` and `load_in_hub` in the registration are not read by the game or DMF; nothing is preloaded.
+
+### Tests
+
+- `tests/external_integration_test.lua`: package lists for known classes, a player without a snapshot, an unknown class, no players and an empty list.
+
+### Runtime status
+
+- Not yet tested in game. The pause is unchanged when the four players have four different classes, and the remaining cost of the end screen itself is not measured.

@@ -317,9 +317,14 @@ function HistoryView:_open_entry(entry)
 
     self._showing_entry = true
 
+    local players = History.player_adapters(loaded.players)
+    if mod.prepare_scoreboard_view_packages then
+        mod.prepare_scoreboard_view_packages(players)
+    end
+
     ui:open_view("another_scoreboard_view", nil, false, false, nil, {
         scoreboard_history = true,
-        players = History.player_adapters(loaded.players),
+        players = players,
         sections = loaded.sections or {},
         snapshot = loaded,
     }, { use_transition_ui = false })

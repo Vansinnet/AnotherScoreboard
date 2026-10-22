@@ -2147,7 +2147,49 @@ function mod._me()
     return p and _account_id(p)
 end
 
+-- archetypes: set of class ids to load talent packages for; nil loads every class.
+-- (Module functions, not locals: the main chunk is at Lua's 200-local limit.)
+function mod.scoreboard_view_packages(archetypes)
+    local packages = {
+        "packages/ui/views/options_view/options_view",
+        -- Owns item_container_landscape_no_rarity, the weapon icon frame material.
+        "packages/ui/views/training_grounds_options_view/training_grounds_options_view",
+        "packages/ui/views/talent_builder_view/talent_builder_view",
+    }
+    for i = 1, #ARCHETYPE_CATALOG do
+        local archetype_id = ARCHETYPE_CATALOG[i].id
+        if not archetypes or archetypes[archetype_id] then
+            packages[#packages + 1] = "packages/ui/views/talent_builder_view/" .. archetype_id
+        end
+    end
+    return packages
+end
+
+-- Talent icons and trees need their class's talent_builder_view package. Load only the classes
+-- of the players shown; if any player's class is unknown, load every class as before.
+-- UIManager.load_view reads Views[view_name].package when the view is created in open_view.
+function mod.prepare_scoreboard_view_packages(players)
+    local view_settings = mod:original_require("scripts/ui/views/views").another_scoreboard_view
+    if not view_settings then
+        return
+    end
+
+    local archetypes = players and #players > 0 and {} or nil
+    for i = 1, archetypes and #players or 0 do
+        local snapshot = players[i].loadout_snapshot
+        local archetype_id = snapshot and snapshot.archetype
+        if not archetype_id or not LIVE_ARCHETYPES[archetype_id] then
+            archetypes = nil
+            break
+        end
+        archetypes[archetype_id] = true
+    end
+
+    view_settings.package = mod.scoreboard_view_packages(archetypes)
+end
+
 local function _open_view(context)
+    mod.prepare_scoreboard_view_packages(context and context.players)
     local ui = Managers.ui
     if ui:view_active("another_scoreboard_view") and not ui:is_view_closing("another_scoreboard_view") then
         ui:close_view("another_scoreboard_view", true)
@@ -3520,19 +3562,7 @@ function mod.on_all_mods_loaded()
             game_world_blur = 0,
             load_always = true,
             load_in_hub = true,
-            package = {
-                "packages/ui/views/options_view/options_view",
-                -- Owns item_container_landscape_no_rarity, the weapon icon frame material.
-                "packages/ui/views/training_grounds_options_view/training_grounds_options_view",
-                "packages/ui/views/talent_builder_view/talent_builder_view",
-                "packages/ui/views/talent_builder_view/veteran",
-                "packages/ui/views/talent_builder_view/zealot",
-                "packages/ui/views/talent_builder_view/psyker",
-                "packages/ui/views/talent_builder_view/ogryn",
-                "packages/ui/views/talent_builder_view/adamant",
-                "packages/ui/views/talent_builder_view/broker",
-                "packages/ui/views/talent_builder_view/cryptic",
-            },
+            package = mod.scoreboard_view_packages(nil),
             path = "AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_view",
             state_bound = false,
             enter_sound_events = { "wwise/events/ui/play_ui_enter_short" },
