@@ -48,6 +48,8 @@ local VIEW_H          = 700
 local SCREEN_H         = UIWorkspace.screen.size[2]
 
 local C = Themes.by_id[Themes.default].colors
+local _highlight_best = true
+local _highlight_worst = true
 
 local PLAYER_COLORS = {
     { 255, 106, 224, 216 },
@@ -320,8 +322,8 @@ local function _row_player_data(row, ids, num_players)
 
             if type(value) == "table" then
                 score = value.score or value.value or 0
-                if ranked and value.best then vc, rank = C.best, "best" end
-                if ranked and value.worst and (row.external or score ~= 0) then vc, rank = C.worst, "worst" end
+                if ranked and _highlight_best and value.best then vc, rank = C.best, "best" end
+                if ranked and _highlight_worst and value.worst and (row.external or score ~= 0) then vc, rank = C.worst, "worst" end
             else
                 score = value or 0
             end
@@ -330,8 +332,8 @@ local function _row_player_data(row, ids, num_players)
             if sd then
                 local rd = sd[aid]
                 score = rd and rd.score or 0
-                if ranked and rd and rd.best then vc, rank = C.best, "best" end
-                if ranked and rd and rd.worst and score ~= 0 then vc, rank = C.worst, "worst" end
+                if ranked and _highlight_best and rd and rd.best then vc, rank = C.best, "best" end
+                if ranked and _highlight_worst and rd and rd.worst and score ~= 0 then vc, rank = C.worst, "worst" end
             end
         end
 
@@ -582,6 +584,8 @@ local function _combined_panel_passes(players, ids, sections, layout, ox, oy, se
     local alternating_row_shading = settings and settings.alternating_row_shading
     local social_icons = settings and settings.social_icons
     local passes = {}
+    _highlight_best = not settings or settings.highlight_best ~= false
+    _highlight_worst = not settings or settings.highlight_worst ~= false
 
     _soft_shadow(passes, ox, oy, layout.w, layout.h)
     passes[#passes + 1] = _rect(ox, oy, BASE_Z, layout.w, layout.h, C.panel)

@@ -112,7 +112,7 @@ Mod authors should use the separate [External Stats API v1](EXTERNAL_STATS_API.m
 
 Settings are organized by feature:
 
-- **Scoreboard Appearance:** theme, text scale, local-player-first ordering, row shading, and exact damage numbers (off by default)
+- **Scoreboard Appearance:** theme, text scale, local-player-first ordering, row shading, green best values and red worst values (each can be turned off), and exact damage numbers (off by default)
 - **In-Mission Scoreboard (Tab):** enable, scale, opacity, and position
 - **End-of-Mission Scoreboard:** automatic display, scale, opacity, and position
 - **Live Stats HUD:** enable, class-specific columns, scale, position, and background opacity
@@ -253,7 +253,7 @@ Lower values are treated as better for Hits that cost HP and Teammates hurt.
 - Counts display as whole numbers.
 - Large damage values use `K` or `M` where needed, or whole numbers grouped by spaces (1 032 234) with Exact Damage Numbers on (scoreboards, Live Stats and the boss popup).
 - Ratios and coherency display as rounded whole percentages.
-- Green, with a marker behind the value, marks the best value and red marks the worst value on ranked rows.
+- Green, with a marker behind the value, marks the best value and red marks the worst value on ranked rows. Highlight Best Values and Highlight Worst Values turn each colour off.
 - For negative statistics such as HP Lost and Disabled, the lowest value is ranked best.
 
 ## License

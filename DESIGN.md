@@ -1,6 +1,6 @@
 # AnotherScoreboard: design
 
-This file starts with the History class filter and the scripted-death boss kill. Older features are described in `README.md`, `EXTERNAL_STATS_API.md` and `types/CONTRACTS.md` (workspace root); add them here when they are next changed.
+This file starts with the History class filter, the scripted-death boss kill and the best/worst highlight settings. Older features are described in `README.md`, `EXTERNAL_STATS_API.md` and `types/CONTRACTS.md` (workspace root); add them here when they are next changed.
 
 ## History class filter
 
@@ -65,3 +65,9 @@ Since Darktide 1.13.3 the Prophet of Decay (`renegade_wizard`) has `has_scripted
 ### Runtime status
 
 - Not yet tested in game.
+
+## Best and worst highlight settings
+
+- `highlight_best` and `highlight_worst` (Scoreboard Appearance, both on by default, so existing users see no change) turn off the green best value with its marker and the red worst value in full scoreboards: Tab overlay, scoreboard view, end screen and history. When off, the value keeps the row's normal colour. Ranking itself is unchanged.
+- `_combined_panel_passes` sets the render module's `_highlight_best` and `_highlight_worst` from the render settings, the same way the theme is set per build; `_row_player_data` reads them. A change rebuilds an open scoreboard like the other appearance settings.
+- No offline harness covers the rendering; tested only by validation.

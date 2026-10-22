@@ -351,6 +351,8 @@ local _settings = {
     text_scale       = 1.15,
     local_player_first = false,
     alternating_row_shading = true,
+    highlight_best = true,
+    highlight_worst = true,
     scoreboard_opacity = 206,
     vertical_offset  = 0,
     horizontal_offset = 0,
@@ -618,6 +620,8 @@ local function _refresh_settings()
     _settings.text_scale        = (mod:get("scoreboard_text_scale") or 115) * 0.01
     _settings.local_player_first = mod:get("local_player_first") == true
     _settings.alternating_row_shading = mod:get("alternating_row_shading") ~= false
+    _settings.highlight_best = mod:get("highlight_best") ~= false
+    _settings.highlight_worst = mod:get("highlight_worst") ~= false
     _settings.exact_damage_numbers = mod:get("exact_damage_numbers") == true
     _settings.scoreboard_opacity = mod:get("scoreboard_opacity") or 206
     _settings.vertical_offset   = mod:get("vertical_offset") or 0
@@ -1440,6 +1444,8 @@ local function _scoreboard_render_settings()
         scale = _settings.scale,
         text_scale = _settings.text_scale,
         alternating_row_shading = _settings.alternating_row_shading,
+        highlight_best = _settings.highlight_best,
+        highlight_worst = _settings.highlight_worst,
         horizontal_offset = _settings.horizontal_offset,
         vertical_offset = _settings.vertical_offset,
         title_text = mod.get_scoreboard_title_text and mod.get_scoreboard_title_text() or nil,
@@ -3616,6 +3622,8 @@ function mod.on_setting_changed(setting_id)
         or setting_id == "scoreboard_text_scale"
         or setting_id == "local_player_first"
         or setting_id == "alternating_row_shading"
+        or setting_id == "highlight_best"
+        or setting_id == "highlight_worst"
         or setting_id == "exact_damage_numbers" then
         _runtime_stat_revision = _runtime_stat_revision + 1
 

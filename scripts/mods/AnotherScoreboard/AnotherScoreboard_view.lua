@@ -64,6 +64,8 @@ local function render_settings_with_title(settings, title_text, end_view)
         scale = end_view and settings.end_scoreboard_scale or settings.scale,
         text_scale = settings.text_scale,
         alternating_row_shading = settings.alternating_row_shading,
+        highlight_best = settings.highlight_best,
+        highlight_worst = settings.highlight_worst,
         horizontal_offset = end_view and settings.end_scoreboard_horizontal_offset or settings.horizontal_offset,
         vertical_offset = end_view and settings.end_scoreboard_vertical_offset or settings.vertical_offset,
         title_text = title_text,

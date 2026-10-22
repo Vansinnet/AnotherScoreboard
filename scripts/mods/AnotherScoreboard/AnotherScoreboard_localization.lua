@@ -287,6 +287,22 @@ local localization = {
 	    en = "Use fixed shading for headings and alternating shading for detail rows in full scoreboards.",
 	    ["zh-cn"] = "完整记分板的标题使用固定底色，详情行使用交替底色。",
 	},
+	highlight_best = {
+	    en = "Highlight Best Values",
+	    ["zh-cn"] = "高亮最佳数值",
+	},
+	highlight_best_tooltip = {
+	    en = "Show the best value in each row in green, with a marker, in full scoreboards. When off, the value is not coloured.",
+	    ["zh-cn"] = "在完整记分板中以绿色并带标记显示每行的最佳数值。关闭后不加颜色。",
+	},
+	highlight_worst = {
+	    en = "Highlight Worst Values",
+	    ["zh-cn"] = "高亮最差数值",
+	},
+	highlight_worst_tooltip = {
+	    en = "Show the worst value in each row in red in full scoreboards. When off, the value is not coloured.",
+	    ["zh-cn"] = "在完整记分板中以红色显示每行的最差数值。关闭后不加颜色。",
+	},
 	exact_damage_numbers = {
 	    en = "Exact Damage Numbers",
 	},
