@@ -142,6 +142,10 @@ local Stats = {}
 -- Attack reports and the death manager can both report the same kill.
 local _killed_units = {}
 local _companion_killed_units = {}
+-- Breeds with a scripted death sequence (Prophet of Decay) report their killing blow as
+-- "damaged" (attack.lua:539-541) and never reach set_dead (bt_wizard_die_action.lua):
+-- enemy unit to the last account that damaged it, until its health reaches zero.
+local _scripted_death_hitters = setmetatable({}, { __mode = "k" })
 
 local _boss_damage = {}
 local _boss_max_health = {}
@@ -694,6 +698,7 @@ function Stats.clear()
     table_clear(_data._total_damage)
     table_clear(_killed_units)
     table_clear(_companion_killed_units)
+    table_clear(_scripted_death_hitters)
     Stats.clear_boss_data()
 end
 
@@ -1229,6 +1234,30 @@ end
 function Stats.clear_kill_tracking()
     table_clear(_killed_units)
     table_clear(_companion_killed_units)
+    table_clear(_scripted_death_hitters)
+end
+
+function Stats.clear_scripted_deaths()
+    table_clear(_scripted_death_hitters)
+end
+
+-- Calls on_death(unit, account_id) once for each watched unit whose health reached zero.
+function Stats.update_scripted_deaths(on_death)
+    if next(_scripted_death_hitters) == nil then
+        return
+    end
+
+    for unit, aid in pairs(_scripted_death_hitters) do
+        if _killed_units[unit] or not Unit.alive(unit) then
+            _scripted_death_hitters[unit] = nil
+        else
+            local hp_ext = ScriptUnit.has_extension(unit, "health_system")
+            if hp_ext and hp_ext:current_health_percent() <= 0 then
+                _scripted_death_hitters[unit] = nil
+                on_death(unit, aid)
+            end
+        end
+    end
 end
 
 function Stats.handle_attack(aid, damage_profile, attacked_unit, hit_weakspot, damage, attack_result, attack_type, enemy_health, is_critical_strike)
@@ -1269,6 +1298,10 @@ function Stats.handle_attack(aid, damage_profile, attacked_unit, hit_weakspot, d
     end
 
     local bn = breed.name
+
+    if breed.has_scripted_death_sequence and (damage or 0) > 0 and not _killed_units[attacked_unit] then
+        _scripted_death_hitters[attacked_unit] = aid
+    end
 
     -- Attack RPCs can arrive before client health replication; keep a local balance
     -- so a stale health value cannot turn the killing blow into extra damage.

@@ -30,12 +30,16 @@ ScriptUnit = {
         return u and u[system]
     end,
 }
-local function spawn_boss(id, breed_name, max_hp)
+-- Replicated health percent per unit (husk_health_extension.lua:47-55); 1 unless a test sets it.
+local health_percent = {}
+local function spawn_boss(id, breed_name, max_hp, has_scripted_death_sequence)
     local unit = { id = id }
-    local breed = { name = breed_name, display_name = "loc_breed_" .. breed_name }
+    local breed = { name = breed_name, display_name = "loc_breed_" .. breed_name,
+        has_scripted_death_sequence = has_scripted_death_sequence }
     units[unit] = {
         unit_data_system = { breed = function() return breed end },
-        health_system = { max_health = function() return max_hp end, current_health = function() return max_hp end },
+        health_system = { max_health = function() return max_hp end, current_health = function() return max_hp end,
+            current_health_percent = function() return health_percent[unit] or 1 end },
         boss_system = { display_name = function() return "loc_boss_" .. breed_name end },
     }
     return unit
@@ -104,5 +108,90 @@ eq(snapshot.boss_damage_by_type.chaos_daemonhost and snapshot.boss_damage_by_typ
     "a row with no kills survives export")
 eq(Stats.import_active_run(snapshot), true, "a row with no kills imports")
 eq(boss_row("chaos_daemonhost").values.b.value, 50, "imported damage kept")
+
+-- 5. Since Darktide 1.13.3 the Prophet of Decay's killing blow reports "damaged" (attack.lua:539-541)
+-- and set_dead never runs for it, so the kill is read from its health. on_death does what the
+-- set_dead hook does (AnotherScoreboard.lua, _record_enemy_death).
+local alive = {}
+Unit = { alive = function(unit) return alive[unit] == true end }
+local deaths, popups = 0, {}
+local function on_death(unit, aid)
+    deaths = deaths + 1
+    Stats.record_kill_from_death(unit, aid)
+    local result = Stats.finalize_boss_encounter(unit)
+    if result then popups[#popups + 1] = result end
+end
+local function kills(aid)
+    local entry = Stats.data_for("total_kills")[aid]
+    return entry and entry.value or 0
+end
+
+Stats.clear()
+local prophet = spawn_boss(6, "renegade_wizard", 1000, true)
+alive[prophet] = true
+hit("a", prophet, 600, "damaged")
+hit("b", prophet, 0, "damaged")
+health_percent[prophet] = 0.4
+Stats.update_scripted_deaths(on_death)
+eq(deaths, 0, "living Prophet is not a kill")
+hit("b", prophet, 400, "damaged")
+health_percent[prophet] = 0
+hit("c", prophet, 0, "damaged")
+Stats.update_scripted_deaths(on_death)
+eq(deaths, 1, "Prophet at zero health is a kill")
+eq(kills("b"), 1, "kill goes to the last player who dealt damage")
+eq(kills("c"), 0, "a hit without damage takes no kill")
+eq(kills("a"), 0, "earlier damage takes no kill")
+eq(#popups, 1, "one boss popup")
+eq(popups[1].total_damage, 1000, "popup has the whole fight's damage")
+eq(boss_row("renegade_wizard").count, 1, "boss row counts the kill")
+Stats.update_scripted_deaths(on_death)
+eq(deaths, 1, "the kill fires once")
+on_death(prophet, "a") -- a later set_dead
+eq(kills("a") + kills("b"), 1, "a later set_dead adds no kill")
+eq(#popups, 1, "a later set_dead adds no popup")
+eq(boss_row("renegade_wizard").count, 1, "a later set_dead adds no boss")
+deaths = 0
+hit("a", prophet, 50, "damaged")
+Stats.update_scripted_deaths(on_death)
+eq(deaths, 0, "a hit after the kill is not watched again")
+
+-- A "died" report on such a breed still counts once and ends the watch.
+Stats.clear()
+deaths = 0
+local twin = spawn_boss(7, "renegade_wizard", 1000, true)
+alive[twin] = true
+hit("a", twin, 600, "damaged")
+hit("a", twin, 400, "died")
+health_percent[twin] = 0
+Stats.update_scripted_deaths(on_death)
+eq(deaths, 0, "no second kill after a died report")
+eq(kills("a"), 1, "died report counts once")
+
+-- A Prophet that despawns, a cleared watch and a breed without the flag never give a kill.
+Stats.clear()
+deaths = 0
+local gone = spawn_boss(8, "renegade_wizard", 1000, true)
+alive[gone] = true
+hit("a", gone, 100, "damaged")
+alive[gone] = nil
+Stats.update_scripted_deaths(on_death)
+alive[gone] = true
+health_percent[gone] = 0
+Stats.update_scripted_deaths(on_death)
+eq(deaths, 0, "a despawned unit is dropped")
+local cleared = spawn_boss(9, "renegade_wizard", 1000, true)
+alive[cleared] = true
+hit("a", cleared, 100, "damaged")
+Stats.clear_scripted_deaths() -- mission exit
+health_percent[cleared] = 0
+Stats.update_scripted_deaths(on_death)
+eq(deaths, 0, "mission exit clears the watch")
+local plain = spawn_boss(10, "chaos_beast_of_nurgle", 1000)
+alive[plain] = true
+hit("a", plain, 100, "damaged")
+health_percent[plain] = 0
+Stats.update_scripted_deaths(on_death)
+eq(deaths, 0, "other bosses wait for died or set_dead")
 
 print("boss_finalize_test: " .. checks .. " checks passed")

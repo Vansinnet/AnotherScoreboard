@@ -550,6 +550,7 @@ local function _clear_unit_runtime_caches()
 
     table_clear(mod._enemy_health)
     table_clear(mod._last_hitter_account_id)
+    if _Stats then _Stats.clear_scripted_deaths() end
     table_clear(mod._ammo_processed_units)
     table_clear(mod.current_ammo)
     table_clear(mod.pending_ammo_pickups)
@@ -2937,17 +2938,25 @@ function(func, self, extension_init_context, unit, extension_init_data, game_ses
     end
 end)
 
--- Covers kills that do not produce an attack report; Stats deduplicates them.
+-- Covers kills that do not produce a "died" attack report; Stats deduplicates them.
+local function _record_enemy_death(unit, last_hitter_account_id)
+    if not _Stats then
+        return
+    end
+
+    _finalize_enemy_aggro(unit)
+    _Stats.record_kill_from_death(unit, last_hitter_account_id)
+    local boss_result = _Stats.finalize_boss_encounter(unit)
+    if boss_result then
+        _boss_popup_queue[#_boss_popup_queue + 1] = boss_result
+        _pump_boss_popup_queue()
+    end
+end
+
 mod:hook("MinionDeathManager", "set_dead",
 function(func, self, unit, attack_direction, hit_zone_name, damage_profile_name, do_ragdoll_push, herding_template_name, ...)
-    if _Stats and unit then
-        _finalize_enemy_aggro(unit)
-        _Stats.record_kill_from_death(unit, mod._last_hitter_account_id[unit])
-        local boss_result = _Stats.finalize_boss_encounter(unit)
-        if boss_result then
-            _boss_popup_queue[#_boss_popup_queue + 1] = boss_result
-            _pump_boss_popup_queue()
-        end
+    if unit then
+        _record_enemy_death(unit, mod._last_hitter_account_id[unit])
     end
     return func(self, unit, attack_direction, hit_zone_name, damage_profile_name, do_ragdoll_push, herding_template_name, ...)
 end)
@@ -3413,6 +3422,10 @@ mod.update = function(dt)
                 ::continue::
             end
         end
+    end
+
+    if _Stats then
+        _Stats.update_scripted_deaths(_record_enemy_death)
     end
 
     if _boss_popup_active then
