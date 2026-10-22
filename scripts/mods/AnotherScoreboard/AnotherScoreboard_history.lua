@@ -6,8 +6,14 @@ local Missions = mod:original_require("scripts/settings/mission/mission_template
 local DangerSettings = mod:original_require("scripts/settings/difficulty/danger_settings")
 local Havoc = mod:original_require("scripts/utilities/havoc")
 local CircumstanceTemplates = mod:original_require("scripts/settings/circumstance/circumstance_templates")
+local UISettings = mod:original_require("scripts/settings/ui/ui_settings")
 
 local History = {}
+
+local ARCHETYPE_BY_ICON = {}
+for archetype_name, icon in pairs(UISettings.archetype_font_icon) do
+    ARCHETYPE_BY_ICON[icon] = archetype_name
+end
 
 local DEFAULT_CAPACITY = 10
 local VERSION = 1
@@ -643,6 +649,7 @@ local function entry_summary(entry, file_name, file_path)
         difficulty_display = entry.difficulty_display,
         game_type_display = entry.game_type_display,
         custom_name = entry.custom_name,
+        local_archetype = entry.local_archetype,
         history_title_display = entry_title_display(entry),
         havoc_modifiers_display = havoc_modifier_lines(entry),
         mission_display = entry.mission_display,
@@ -991,6 +998,51 @@ function History.cache_ready()
     return cache_ready
 end
 
+-- Same id the scoreboard stores per player: account id, or the name when there is none.
+local function local_account_id()
+    local player_manager = Managers.player
+    local player = player_manager and player_manager:local_player_safe(1)
+
+    return player and (player:account_id() or player:name())
+end
+
+-- Entries saved before local_archetype existed are matched by account id; the index keeps
+-- only the class icon there, which is unique per class.
+function History.entry_local_archetype(entry, account_id)
+    if entry.local_archetype then
+        return entry.local_archetype
+    end
+
+    if account_id == nil then
+        return nil
+    end
+
+    for _, player in ipairs(entry.players or {}) do
+        if player.account_id == account_id then
+            local loadout = player.loadout_snapshot
+            return loadout and loadout.archetype or ARCHETYPE_BY_ICON[player.archetype_icon]
+        end
+    end
+
+    return nil
+end
+
+function History.filter_by_archetype(entries, archetype_name)
+    if not archetype_name then
+        return entries
+    end
+
+    local account_id = local_account_id()
+    local filtered = {}
+    for i = 1, #entries do
+        if History.entry_local_archetype(entries[i], account_id) == archetype_name then
+            filtered[#filtered + 1] = entries[i]
+        end
+    end
+
+    return filtered
+end
+
 function History.refresh_cache(rebuild_from_files)
     local path = appdata_path()
     local capacity = History.recent_capacity()
@@ -1302,6 +1354,7 @@ function History.save(snapshot)
     snapshot.game_type_display = History.game_type_display(snapshot.mission)
     snapshot.havoc_modifiers_display = havoc_modifier_lines(snapshot)
     snapshot.history_title_display = History.entry_title_display(snapshot)
+    snapshot.local_archetype = History.entry_local_archetype(snapshot, local_account_id())
 
     if not write_snapshot(file_path, snapshot) then
         return false

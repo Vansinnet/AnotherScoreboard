@@ -1297,6 +1297,14 @@ local localization = {
 	    en = "No saved scoreboards yet.",
 	    ["zh-cn"] = "还没有保存的记分板。",
 	},
+	history_no_class_entries = {
+	    en = "No missions played as this class.",
+	    ["zh-cn"] = "没有以该职业进行的任务。",
+	},
+	history_filter_all = {
+	    en = "All",
+	    ["zh-cn"] = "全部",
+	},
 	history_game_type_expedition = {
 	    en = "Expedition",
 	    ["zh-cn"] = "远征",
@@ -1324,6 +1332,10 @@ local localization = {
 	history_escape_hint = {
 	    en = "ESC - Exit  |  Mouse wheel - Scroll  |  SPACE - Clear Recent",
 	    ["zh-cn"] = "ESC - 退出  |  鼠标滚轮 - 滚动  |  SPACE - 清除最近记录",
+	},
+	history_filtered_hint = {
+	    en = "ESC - Exit  |  Mouse wheel - Scroll  |  Select All to clear Recent",
+	    ["zh-cn"] = "ESC - 退出  |  鼠标滚轮 - 滚动  |  选择“全部”后可清除最近记录",
 	},
 	history_saved_hint = {
 	    en = "ESC - Exit  |  Mouse wheel - Scroll  |  Manage saved games individually",

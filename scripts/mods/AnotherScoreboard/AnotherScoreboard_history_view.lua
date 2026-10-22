@@ -4,6 +4,8 @@ local mod = get_mod("AnotherScoreboard")
 local Managers = Managers
 local UIWorkspace = mod:original_require("scripts/settings/ui/ui_workspace_settings")
 local UIWidget = mod:original_require("scripts/managers/ui/ui_widget")
+local UISettings = mod:original_require("scripts/settings/ui/ui_settings")
+local Archetypes = mod:original_require("scripts/settings/archetype/archetypes")
 local Themes = mod:io_dofile("AnotherScoreboard/scripts/mods/AnotherScoreboard/AnotherScoreboard_themes")
 
 local HistoryView = class("AnotherScoreboardHistoryView", "BaseView")
@@ -24,6 +26,20 @@ local MODIFIER_W = SAVE_BUTTON_X - MODIFIER_X - 8
 local MAIN_TEXT_W = MODIFIER_X - 32
 local MODIFIER_FONT_SIZE = 13
 local MAX_VISIBLE_ENTRIES = math.floor((VIEW_H - FOOTER_H - LIST_BOTTOM_PADDING - LIST_TOP + ENTRY_GAP) / (ENTRY_H + ENTRY_GAP))
+local FILTER_RIGHT = 864
+local FILTER_Y = 62
+local FILTER_H = 22
+local FILTER_GAP = 4
+local FILTER_ALL_W = 48
+local FILTER_CLASS_W = 30
+
+local CLASS_FILTERS = {}
+for _, archetype in pairs(Archetypes) do
+    CLASS_FILTERS[#CLASS_FILTERS + 1] = archetype
+end
+table.sort(CLASS_FILTERS, function(a, b)
+    return (a.ui_selection_order or math.huge) < (b.ui_selection_order or math.huge)
+end)
 
 local COLORS = Themes.by_id[Themes.default].colors.history
 
@@ -34,7 +50,7 @@ local function refresh_theme()
     COLORS = selected.colors.history
 end
 
-local function text_pass(value_id, text, x, y, z, w, h, size, color, valign, halign)
+local function text_pass(value_id, text, x, y, z, w, h, size, color, valign, halign, font_type)
     return {
         pass_type = "text",
         value_id = value_id,
@@ -43,7 +59,7 @@ local function text_pass(value_id, text, x, y, z, w, h, size, color, valign, hal
             offset = { x, y, z },
             size = { w, h },
             font_size = size,
-            font_type = "proxima_nova_bold",
+            font_type = font_type or "proxima_nova_bold",
             text_horizontal_alignment = halign or "left",
             text_vertical_alignment = valign or "center",
             text_color = color,
@@ -62,7 +78,7 @@ local function rect_pass(x, y, z, w, h, color)
     }
 end
 
-local function button_definition(text, x, y, w, h, selected)
+local function button_definition(text, x, y, w, h, selected, font_type)
     local color = selected and COLORS.button_selected or COLORS.button
 
     return UIWidget.create_definition({
@@ -90,7 +106,7 @@ local function button_definition(text, x, y, w, h, selected)
                 style.color[4] = target[4]
             end,
         },
-        text_pass("text", text, x, y, BASE_Z + 6, w, h, 14, COLORS.text, "center", "center"),
+        text_pass("text", text, x, y, BASE_Z + 6, w, h, 14, COLORS.text, "center", "center", font_type),
     }, "content", nil, { VIEW_W, VIEW_H })
 end
 
@@ -202,6 +218,8 @@ function HistoryView:init(settings, context)
     self._active_tab = "recent"
     self._first_entries = { recent = 1, saved = 1 }
     self._max_first_entries = { recent = 1, saved = 1 }
+    self._class_filter = nil
+    self._owned_classes = {}
     self._popup_id = nil
     HistoryView.super.init(self, self._definitions, settings, context or {})
     self._pass_draw = true
@@ -210,10 +228,13 @@ end
 
 function HistoryView:on_enter()
     HistoryView.super.on_enter(self)
+    self:_check_class_ownership()
     self:_build()
 end
 
 function HistoryView:on_exit()
+    self._closed = true
+
     if self._popup_id and Managers.event then
         Managers.event:trigger("event_remove_ui_popup", self._popup_id)
         self._popup_id = nil
@@ -259,7 +280,7 @@ function HistoryView:update(dt, t, input_service)
         end
     end
 
-    if self._active_tab == "recent" and input_service and input_service:get("next") then
+    if self._active_tab == "recent" and not self._class_filter and input_service and input_service:get("next") then
         local History = self:_history()
         if History.clear then
             History.clear()
@@ -379,6 +400,40 @@ function HistoryView:_set_tab(tab)
 
     self._active_tab = tab
     self._rebuild_requested = true
+end
+
+function HistoryView:_set_class_filter(archetype_name)
+    if archetype_name == self._class_filter then
+        return
+    end
+
+    self._class_filter = archetype_name
+    self._first_entries.recent = 1
+    self._first_entries.saved = 1
+    self._rebuild_requested = true
+end
+
+-- Base classes are always offered; a DLC class only once the platform confirms ownership,
+-- the same check the class selection screen uses (DLCUtils.is_archetype_available).
+function HistoryView:_check_class_ownership()
+    local dlc_manager = Managers.dlc
+
+    for i = 1, #CLASS_FILTERS do
+        local archetype = CLASS_FILTERS[i]
+        local archetype_name = archetype.name
+        local requires_dlc = archetype.requires_dlc
+
+        if not requires_dlc then
+            self._owned_classes[archetype_name] = true
+        elseif dlc_manager then
+            dlc_manager:is_owner_of(requires_dlc):next(function(is_owner)
+                if is_owner and not self._closed then
+                    self._owned_classes[archetype_name] = true
+                    self._rebuild_requested = true
+                end
+            end)
+        end
+    end
 end
 
 function HistoryView:_popup_closed()
@@ -539,8 +594,8 @@ function HistoryView:_build()
         return
     end
 
-    local recent_entries = History.list()
-    local saved_entries = History.saved_list and History.saved_list() or {}
+    local recent_entries = History.filter_by_archetype(History.list(), self._class_filter)
+    local saved_entries = History.filter_by_archetype(History.saved_list and History.saved_list() or {}, self._class_filter)
     local entries = self._active_tab == "saved" and saved_entries or recent_entries
     local cache_ready = not History.cache_ready or History.cache_ready()
     self._history_cache_ready = cache_ready
@@ -551,13 +606,15 @@ function HistoryView:_build()
     local first_entry = self._first_entries[tab]
     local subtitle = tab == "saved" and mod:localize("history_saved_subtitle")
         or mod:localize("history_view_subtitle", History.recent_capacity())
-    local hint_id = self._active_tab == "saved" and "history_saved_hint" or "history_escape_hint"
+    local hint_id = self._active_tab == "saved" and "history_saved_hint"
+        or self._class_filter and "history_filtered_hint"
+        or "history_escape_hint"
     local last_entry = math.min(#entries, first_entry + MAX_VISIBLE_ENTRIES - 1)
 
     local background_passes = {
         rect_pass(0, 0, BASE_Z - 1, VIEW_W, VIEW_H, COLORS.panel),
         text_pass("title", mod:localize("history_view_title"), 36, 18, BASE_Z + 4, VIEW_W - 72, 42, 30, COLORS.title),
-        text_pass("subtitle", subtitle, 38, 56, BASE_Z + 4, VIEW_W - 76, 24, 16, COLORS.sub),
+        text_pass("subtitle", subtitle, 38, 56, BASE_Z + 4, 530, 24, 16, COLORS.sub),
         rect_pass(0, VIEW_H - FOOTER_H, BASE_Z + 2, VIEW_W, FOOTER_H, COLORS.footer),
         text_pass("hint", mod:localize(hint_id), 16, VIEW_H - 36, BASE_Z + 4, 560, 24, 15, COLORS.text),
     }
@@ -585,8 +642,11 @@ function HistoryView:_build()
     end
     self._tab_widgets[#self._tab_widgets + 1] = saved_widget
 
+    self:_build_class_filters()
+
     if #entries == 0 then
-        local empty_id = self._active_tab == "saved" and "history_no_saved_entries"
+        local empty_id = self._class_filter and cache_ready and "history_no_class_entries"
+            or self._active_tab == "saved" and "history_no_saved_entries"
             or cache_ready and "history_no_entries"
             or "history_loading"
         local empty = UIWidget.create_definition({
@@ -611,6 +671,34 @@ function HistoryView:_build()
             self:_handle_saved_button(widget.content.entry)
         end
         self._entry_widgets[#self._entry_widgets + 1] = widget
+    end
+end
+
+function HistoryView:_build_class_filters()
+    local owned = {}
+    for i = 1, #CLASS_FILTERS do
+        if self._owned_classes[CLASS_FILTERS[i].name] then
+            owned[#owned + 1] = CLASS_FILTERS[i].name
+        end
+    end
+
+    local x = FILTER_RIGHT - FILTER_ALL_W - #owned * (FILTER_CLASS_W + FILTER_GAP)
+    local all_widget = self:_create_widget("as_history_filter_all", button_definition(mod:localize("history_filter_all"), x, FILTER_Y, FILTER_ALL_W, FILTER_H, not self._class_filter))
+    all_widget.content.hotspot.pressed_callback = function()
+        self:_set_class_filter(nil)
+    end
+    self._tab_widgets[#self._tab_widgets + 1] = all_widget
+    x = x + FILTER_ALL_W + FILTER_GAP
+
+    for i = 1, #owned do
+        local archetype_name = owned[i]
+        local icon = UISettings.archetype_font_icon[archetype_name] or "?"
+        local widget = self:_create_widget("as_history_filter_" .. archetype_name, button_definition(icon, x, FILTER_Y, FILTER_CLASS_W, FILTER_H, self._class_filter == archetype_name, "itc_novarese_bold"))
+        widget.content.hotspot.pressed_callback = function()
+            self:_set_class_filter(archetype_name)
+        end
+        self._tab_widgets[#self._tab_widgets + 1] = widget
+        x = x + FILTER_CLASS_W + FILTER_GAP
     end
 end
 
